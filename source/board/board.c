@@ -6,6 +6,7 @@
 #define BOARD_FIELDS BOARD_SIZE * BOARD_SIZE
 
 Pawn* board[BOARD_FIELDS];
+PawnColor nextMoveColor;
 
 void killPawnsAlongMove(int rfrom, int cfrom, int rto, int cto);
 
@@ -13,9 +14,14 @@ void killPawnsAlongMove(int rfrom, int cfrom, int rto, int cto);
  * Initializes the empty game board
  */
 void initBoard(){
+    nextMoveColor = white;
     for(int i = 0; i < BOARD_FIELDS; i++){
         board[i] = NULL;
     }
+}
+
+PawnColor getNextMoveColor(){
+    return nextMoveColor;
 }
 
 /**
@@ -92,6 +98,17 @@ int movePawnAtTo(int rfrom, int cfrom, int rto, int cto){
     placePawnAt(NULL, rfrom, cfrom);
 
     killPawnsAlongMove(rfrom, cfrom, rto, cto);
+
+    // TODO: Check if there are more pawns to kill
+    if(0){
+        return BOARD_MOVE_NOT_FINISHED;
+    }
+
+    PawnColor c = getPawnColor(p);
+    if(c == white && rto == BOARD_SIZE - 1) transformToKing(p);
+    if(c == black && rto == 0) transformToKing(p);
+
+    nextMoveColor = !nextMoveColor;
 
     return BOARD_MOVE_SUCCESSFUL;
 }

@@ -27,6 +27,8 @@ int checkMove(int rfrom, int cfrom, int rto, int cto){
     Pawn *pto = getPawnAt(rto, cto);
     if(pto != NULL) return MOVE_DESTINATION_OCCUPIED;
 
+    if(getNextMoveColor() != getPawnColor(p)) return MOVE_CANNOT_MOVE_OPPONENTS_PAWN;
+
     int chk = checkOnlyForward(p, rfrom, cfrom, rto, cto);
     if(chk != MOVE_LEGAL) return chk;
 
