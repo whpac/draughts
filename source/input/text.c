@@ -32,7 +32,6 @@ char doInputIteration(){
     char cmd = help_char;
     int process_res = CMD_PROC_SUCCESSFUL;
     do{
-        //if(cmd != help_char) printf("Command '%c' is unknown or cannot be completed.\n", cmd);
         handleError(process_res);
         printf("Type command ('%c' for help): ", help_char);
         scanf(" %c", &cmd);
@@ -62,6 +61,18 @@ void handleError(int err_code){
             break;
         case MOVE_OUT_OF_BOARD:
             printf("One of the coordinates is out of the board.\n");
+            break;
+        case MOVE_BACKWARDS:
+            printf("Cannot move backwards.\n");
+            break;
+        case MOVE_MUST_BE_DIAGONAL:
+            printf("Move must be along a diagonal.\n");
+            break;
+        case MOVE_TOO_LONG:
+            printf("The move is too long.\n");
+            break;
+        case MOVE_CANNOT_KILL_OWN:
+            printf("You cannot kill your own pawn.\n");
             break;
         default:
             printf("An unknown error occured. Code: %d\n", err_code);
