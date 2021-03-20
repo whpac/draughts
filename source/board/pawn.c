@@ -23,6 +23,14 @@ Pawn* createPawn(PawnColor color, char is_king){
 }
 
 /**
+ * Destroys the pawn
+ * @param pawn A pawn to be destroyed
+ */
+void destroyPawn(Pawn* pawn){
+    free(pawn);
+}
+
+/**
  * Returns the pawn color
  */
 PawnColor getPawnColor(Pawn* pawn){
