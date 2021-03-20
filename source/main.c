@@ -3,13 +3,15 @@
 
 #include "board/pawn.h"
 #include "board/board.h"
+#include "display/console.h"
+#include "input/text.h"
 
 int main()
 {
     initBoard();
 
-    Pawn* p = createPawn(white, 0);
-    printf("Color: %d, King: %d\n", getPawnColor(p), isPawnKing(p));
+    createStartLayout();
+    beginInputLoop(&displayBoard);
 
     return 0;
 }
