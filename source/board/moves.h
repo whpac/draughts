@@ -6,6 +6,10 @@
 #define MOVE_DESTINATION_OCCUPIED 3002
 #define MOVE_NO_SOURCE_PAWN 3003
 #define MOVE_OUT_OF_BOARD 3004
+#define MOVE_BACKWARDS 3005
+#define MOVE_MUST_BE_DIAGONAL 3006
+#define MOVE_TOO_LONG 3007
+#define MOVE_CANNOT_KILL_OWN 3008
 
 int checkMove(int rfrom, int cfrom, int rto, int cto);
 
