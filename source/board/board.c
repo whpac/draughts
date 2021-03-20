@@ -61,23 +61,30 @@ void destroyPawnAt(int row, int col){
 }
 
 /**
- * Moves a pawn across the board. Doesn't check anything
+ * Moves a pawn across the board. It prevents from moving a pawn to
+ * an unplayable field or to an occupied one.
  * @param rfrom The source row
  * @param cfrom The source column
  * @param rto The destination row
  * @param cto The destination column
  */
-void movePawnAtTo(int rfrom, int cfrom, int rto, int cto){
+int movePawnAtTo(int rfrom, int cfrom, int rto, int cto){
+    if(!isPlayableField(rto, cto)){
+        return BOARD_DESTINATION_UNPLAYABLE;
+    }
+
     Pawn *p = getPawnAt(rfrom, cfrom);
-    if(p == NULL) return;
+    if(p == NULL) return BOARD_NO_SOURCE_PAWN;
 
     Pawn *pto = getPawnAt(rto, cto);
     if(pto != NULL){
-        destroyPawnAt(rto, cto);
+        return BOARD_DESTINATION_OCCUPIED;
     }
 
     placePawnAt(p, rto, cto);
     placePawnAt(NULL, rfrom, cfrom);
+
+    return BOARD_MOVE_SUCCESSFUL;
 }
 
 /**

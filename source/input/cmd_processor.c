@@ -51,8 +51,7 @@ void printHelp(){
  * @param cto The destination column
  */
 int movePawn(int rfrom, int cfrom, int rto, int cto){
-    if(!isPlayableField(rto, cto)) return CMD_PROC_TO_FIELD_UNPLAYABLE;
-
-    movePawnAtTo(rfrom, cfrom, rto, cto);
-    return CMD_PROC_SUCCESSFUL;
+    int res = movePawnAtTo(rfrom, cfrom, rto, cto);
+    if(res == BOARD_MOVE_SUCCESSFUL) return CMD_PROC_SUCCESSFUL;
+    return res;
 }
