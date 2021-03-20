@@ -20,8 +20,7 @@ char getQuitChar(){
  * @param cmd The command to process
  * @param int_getter Function used to get value of an integer argument
  */
-int processCommand(char cmd, int (*int_getter)())
-{
+int processCommand(char cmd, int (*int_getter)()){
     if(cmd == getHelpChar()) printHelp();
     else if(cmd == 'm'){
         int rfrom = (*int_getter)();
@@ -52,12 +51,8 @@ void printHelp(){
  * @param cto The destination column
  */
 int movePawn(int rfrom, int cfrom, int rto, int cto){
-    Pawn* p = getPawnAt(rfrom, cfrom);
-    if(p == NULL) return CMD_PROC_SUCCESSFUL;
-
     if(!isPlayableField(rto, cto)) return CMD_PROC_TO_FIELD_UNPLAYABLE;
 
-    placePawnAt(p, rto, cto);
-    placePawnAt(NULL, rfrom, cfrom);
+    movePawnAtTo(rfrom, cfrom, rto, cto);
     return CMD_PROC_SUCCESSFUL;
 }
