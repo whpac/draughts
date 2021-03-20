@@ -74,6 +74,9 @@ void handleError(int err_code){
         case MOVE_CANNOT_KILL_OWN:
             printf("You cannot kill your own pawn.\n");
             break;
+        case MOVE_CANNOT_MOVE_OPPONENTS_PAWN:
+            printf("You cannot move your opponent's pawn.\n");
+            break;
         default:
             printf("An unknown error occured. Code: %d\n", err_code);
             break;
