@@ -52,6 +52,6 @@ void printHelp(){
  */
 int movePawn(int rfrom, int cfrom, int rto, int cto){
     int res = movePawnAtTo(rfrom, cfrom, rto, cto);
-    if(res == BOARD_MOVE_SUCCESSFUL) return CMD_PROC_SUCCESSFUL;
+    if(res == BOARD_MOVE_SUCCESSFUL || res == BOARD_MOVE_NOT_FINISHED) return CMD_PROC_SUCCESSFUL;
     return res;
 }
