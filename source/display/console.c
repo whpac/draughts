@@ -5,13 +5,13 @@
 void displayBoard(){
     int size = getBoardSize();
 
-    printf("+");
+    printf(" +");
     for(int i = 0; i < size; i++)
         printf("-");
     printf("+\n");
 
     for(int row = 0; row < size; row++){
-        printf("|");
+        printf("%d|", row);
         for(int col = 0; col < size; col++){
             Pawn* p = getPawnAt(row, col);
 
@@ -30,8 +30,13 @@ void displayBoard(){
         printf("|\n");
     }
 
-    printf("+");
+    printf(" +");
     for (int i = 0; i < size; i++)
         printf("-");
     printf("+\n");
+
+    printf("  ");
+    for(int i = 0; i < size; i++)
+        printf("%d", i);
+    printf("\n");
 }
