@@ -16,6 +16,13 @@ void initBoard(){
 }
 
 /**
+ * Returns the board side length
+ */
+int getBoardSize(){
+    return BOARD_SIZE;
+}
+
+/**
  * Returns a pointer to the pawn at the given position
  * @param row The row where the pawn is
  * @param col The column where the pawn is
