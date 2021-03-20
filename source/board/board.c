@@ -7,6 +7,8 @@
 
 Pawn* board[BOARD_FIELDS];
 
+void killPawnsAlongMove(int rfrom, int cfrom, int rto, int cto);
+
 /**
  * Initializes the empty game board
  */
@@ -89,6 +91,8 @@ int movePawnAtTo(int rfrom, int cfrom, int rto, int cto){
     placePawnAt(p, rto, cto);
     placePawnAt(NULL, rfrom, cfrom);
 
+    killPawnsAlongMove(rfrom, cfrom, rto, cto);
+
     return BOARD_MOVE_SUCCESSFUL;
 }
 
@@ -127,5 +131,23 @@ void createStartLayout(){
             p = createPawn(black, 0);
             placePawnAt(p, row, col);
         }
+    }
+}
+
+/**
+ * Kills all pawns that are between (rfrom, cfrom) and (rto, cto).
+ * @param rfrom The source row
+ * @param cfrom The source column
+ * @param rto The destination row
+ * @param cto The destination column
+ */
+void killPawnsAlongMove(int rfrom, int cfrom, int rto, int cto){
+    int rdir = 1, cdir = 1;
+    if(rfrom > rto) rdir = -1;
+    if(cfrom > cto) cdir = -1;
+
+    int len = rdir * (rto - rfrom);
+    for(int i = 1; i < len; i++){
+        destroyPawnAt(rfrom + i*rdir, cfrom + i*cdir);
     }
 }
