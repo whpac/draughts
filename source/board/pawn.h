@@ -9,5 +9,6 @@ void destroyPawn(Pawn* pawn);
 
 PawnColor getPawnColor(Pawn* pawn);
 char isPawnKing(Pawn* pawn);
+void transformToKing(Pawn* pawn);
 
 #endif

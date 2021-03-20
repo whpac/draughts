@@ -32,6 +32,7 @@ void destroyPawn(Pawn* pawn){
 
 /**
  * Returns the pawn color
+ * @param pawn The pawn to check
  */
 PawnColor getPawnColor(Pawn* pawn){
     return pawn->color;
@@ -39,7 +40,16 @@ PawnColor getPawnColor(Pawn* pawn){
 
 /**
  * Returns whether the pawn is a king
+ * @param pawn The pawn to check
  */
 char isPawnKing(Pawn* pawn){
     return pawn->is_king;
+}
+
+/**
+ * Transforms the pawn to a king
+ * @param pawn The pawn to transpform
+ */
+void transformToKing(Pawn* pawn){
+    pawn->is_king = 1;
 }
