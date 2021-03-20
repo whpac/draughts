@@ -46,3 +46,41 @@ void placePawnAt(Pawn* pawn, int row, int col){
 
     board[row * BOARD_SIZE + col] = pawn;
 }
+
+/**
+ * Checks whether the given field can host a pawn
+ * @param row A coordinate of the field to check
+ * @param col A coordinate of the field to check
+ */
+char isPlayableField(int row, int col){
+    return (row + col) % 2 == 1;
+}
+
+/**
+ * Places pawns in its starting positions.
+ * White ones are in rows closer to 0 and black - closer to BOARD_SIZE
+ */
+void createStartLayout(){
+    Pawn* p;
+
+    // Place white pawns
+    for(int row = 0; row < BOARD_SIZE / 2 - 1; row++){
+        for(int col = 0; col < BOARD_SIZE; col++){
+            if(!isPlayableField(row, col)) continue;
+            p = createPawn(white, 0);
+            placePawnAt(p, row, col);
+        }
+    }
+
+    // Place black pawns
+    for (int row = BOARD_SIZE / 2 + 1; row < BOARD_SIZE; row++)
+    {
+        for (int col = 0; col < BOARD_SIZE; col++)
+        {
+            if (!isPlayableField(row, col))
+                continue;
+            p = createPawn(black, 0);
+            placePawnAt(p, row, col);
+        }
+    }
+}

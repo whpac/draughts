@@ -9,4 +9,7 @@ int getBoardSize();
 Pawn* getPawnAt(int row, int col);
 void placePawnAt(Pawn* pawn, int row, int col);
 
+char isPlayableField(int row, int col);
+void createStartLayout();
+
 #endif
