@@ -3,7 +3,7 @@
 #include "../board/board.h"
 
 void printHelp();
-void movePawn(int rfrom, int cfrom, int rto, int cto);
+int movePawn(int rfrom, int cfrom, int rto, int cto);
 
 /** Returns the character that invokes help. */
 char getHelpChar(){
@@ -16,11 +16,11 @@ char getQuitChar(){
 }
 
 /**
- * Processes the command. Returns 0 if command was unknown.
+ * Processes the command. Returns 0 if command was successful.
  * @param cmd The command to process
  * @param int_getter Function used to get value of an integer argument
  */
-char processCommand(char cmd, int (*int_getter)())
+int processCommand(char cmd, int (*int_getter)())
 {
     if(cmd == getHelpChar()) printHelp();
     else if(cmd == 'm'){
@@ -28,10 +28,10 @@ char processCommand(char cmd, int (*int_getter)())
         int cfrom = (*int_getter)();
         int rto = (*int_getter)();
         int cto = (*int_getter)();
-        movePawn(rfrom, cfrom, rto, cto);
+        return movePawn(rfrom, cfrom, rto, cto);
     }
-    else return 0;
-    return 1;
+    else return CMD_PROC_UNKNOWN;
+    return CMD_PROC_SUCCESSFUL;
 }
 
 /** Prints the help message */
@@ -51,11 +51,13 @@ void printHelp(){
  * @param rto The destination row
  * @param cto The destination column
  */
-void movePawn(int rfrom, int cfrom, int rto, int cto){
+int movePawn(int rfrom, int cfrom, int rto, int cto){
     Pawn* p = getPawnAt(rfrom, cfrom);
-    if(p == NULL) return;
+    if(p == NULL) return CMD_PROC_SUCCESSFUL;
+
+    if(!isPlayableField(rto, cto)) return CMD_PROC_TO_FIELD_UNPLAYABLE;
 
     placePawnAt(p, rto, cto);
     placePawnAt(NULL, rfrom, cfrom);
-    printf("Moved pawn from (%d, %d) to (%d, %d).\n", rfrom, cfrom, rto, cto);
+    return CMD_PROC_SUCCESSFUL;
 }

@@ -4,6 +4,7 @@
 
 char doInputIteration();
 int getIntArg();
+void handleError();
 
 void (*boardDisplay)();
 
@@ -27,17 +28,34 @@ char doInputIteration(){
 
     char help_char = getHelpChar();
     char cmd = help_char;
-    char process_res;
+    int process_res = CMD_PROC_SUCCESSFUL;
     do{
-        if(cmd != help_char) printf("Unknown command: '%c'.\n", cmd);
+        //if(cmd != help_char) printf("Command '%c' is unknown or cannot be completed.\n", cmd);
+        handleError(process_res);
         printf("Type command ('%c' for help): ", help_char);
         scanf(" %c", &cmd);
 
         if(cmd == 'q') return 0;
         process_res = processCommand(cmd, &getIntArg);
-    }while(!process_res || cmd == help_char);
+    }while(process_res != CMD_PROC_SUCCESSFUL || cmd == help_char);
 
     return 1;
+}
+
+void handleError(int err_code){
+    switch(err_code){
+        case CMD_PROC_SUCCESSFUL:
+            break;
+        case CMD_PROC_UNKNOWN:
+            printf("Passed command is unknown.\n");
+            break;
+        case CMD_PROC_TO_FIELD_UNPLAYABLE:
+            printf("The destination field is unplayable.\n");
+            break;
+        default:
+            printf("An unknown error occured. Code:%d\n", err_code);
+            break;
+    }
 }
 
 /** Function used to read an integer argument in order to process the command */
