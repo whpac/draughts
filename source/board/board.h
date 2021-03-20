@@ -4,12 +4,10 @@
 #include "pawn.h"
 
 #define BOARD_MOVE_SUCCESSFUL 1000
-#define BOARD_DESTINATION_UNPLAYABLE 1001
-#define BOARD_DESTINATION_OCCUPIED 1002
-#define BOARD_NO_SOURCE_PAWN 1003
 
 void initBoard();
 int getBoardSize();
+char isInBoard(int row, int col);
 
 Pawn* getPawnAt(int row, int col);
 void placePawnAt(Pawn* pawn, int row, int col);

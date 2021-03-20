@@ -1,5 +1,6 @@
 #include<stddef.h>
 #include "board.h"
+#include "moves.h"
 
 #define BOARD_SIZE 8
 #define BOARD_FIELDS BOARD_SIZE * BOARD_SIZE
@@ -23,13 +24,24 @@ int getBoardSize(){
 }
 
 /**
+ * Checks whether the given position is inside the board
+ * @param row The row to check
+ * @param col The column to check
+ */
+char isInBoard(int row, int col){
+    if(row < 0 || col < 0) return 0;
+    if(row >= BOARD_SIZE || col >= BOARD_SIZE) return 0;
+
+    return 1;
+}
+
+/**
  * Returns a pointer to the pawn at the given position
  * @param row The row where the pawn is
  * @param col The column where the pawn is
  */
 Pawn* getPawnAt(int row, int col){
-    if(row < 0 || col < 0) return NULL;
-    if(row >= BOARD_SIZE || col >= BOARD_SIZE) return NULL;
+    if(!isInBoard(row, col)) return NULL;
 
     return board[row * BOARD_SIZE + col];
 }
@@ -41,8 +53,7 @@ Pawn* getPawnAt(int row, int col){
  * @param col The column where the pawn is to be placed
  */
 void placePawnAt(Pawn* pawn, int row, int col){
-    if(row < 0 || col < 0) return;
-    if(row >= BOARD_SIZE || col >= BOARD_SIZE) return;
+    if(!isInBoard(row, col)) return;
 
     board[row * BOARD_SIZE + col] = pawn;
 }
@@ -61,7 +72,7 @@ void destroyPawnAt(int row, int col){
 }
 
 /**
- * Moves a pawn across the board. It prevents from moving a pawn to
+ * Moves a pawn across the board. It prevents from moving a pawn to 
  * an unplayable field or to an occupied one.
  * @param rfrom The source row
  * @param cfrom The source column
@@ -69,17 +80,11 @@ void destroyPawnAt(int row, int col){
  * @param cto The destination column
  */
 int movePawnAtTo(int rfrom, int cfrom, int rto, int cto){
-    if(!isPlayableField(rto, cto)){
-        return BOARD_DESTINATION_UNPLAYABLE;
-    }
+    int res = checkMove(rfrom, cfrom, rto, cto);
+    if(res != MOVE_LEGAL) return res;
 
     Pawn *p = getPawnAt(rfrom, cfrom);
-    if(p == NULL) return BOARD_NO_SOURCE_PAWN;
-
-    Pawn *pto = getPawnAt(rto, cto);
-    if(pto != NULL){
-        return BOARD_DESTINATION_OCCUPIED;
-    }
+    if(p == NULL) return MOVE_NO_SOURCE_PAWN;
 
     placePawnAt(p, rto, cto);
     placePawnAt(NULL, rfrom, cfrom);

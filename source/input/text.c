@@ -2,6 +2,7 @@
 #include "text.h"
 #include "cmd_processor.h"
 #include "../board/board.h"
+#include "../board/moves.h"
 
 char doInputIteration();
 int getIntArg();
@@ -50,14 +51,17 @@ void handleError(int err_code){
         case CMD_PROC_UNKNOWN:
             printf("Passed command is unknown.\n");
             break;
-        case BOARD_DESTINATION_UNPLAYABLE:
+        case MOVE_DESTINATION_UNPLAYABLE:
             printf("The destination field is unplayable.\n");
             break;
-        case BOARD_DESTINATION_OCCUPIED:
+        case MOVE_DESTINATION_OCCUPIED:
             printf("The destination field is occupied.\n");
             break;
-        case BOARD_NO_SOURCE_PAWN:
+        case MOVE_NO_SOURCE_PAWN:
             printf("The source field contains no pawn.\n");
+            break;
+        case MOVE_OUT_OF_BOARD:
+            printf("One of the coordinates is out of the board.\n");
             break;
         default:
             printf("An unknown error occured. Code: %d\n", err_code);
