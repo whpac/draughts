@@ -39,4 +39,6 @@ void displayBoard(){
     for(int i = 0; i < size; i++)
         printf("%d", i);
     printf("\n");
+
+    printf("It's %s's move.\n", getNextMoveColor() == white ? "WHITE" : "BLACK");
 }
