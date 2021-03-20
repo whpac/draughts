@@ -48,6 +48,39 @@ void placePawnAt(Pawn* pawn, int row, int col){
 }
 
 /**
+ * Destroys a pawn that is places at the given position
+ * @param row The row where the pawn is placed
+ * @param col The column where the pawn is placed
+ */
+void destroyPawnAt(int row, int col){
+    Pawn* p = getPawnAt(row, col);
+    if(p == NULL) return;
+
+    placePawnAt(NULL, row, col);
+    destroyPawn(p);
+}
+
+/**
+ * Moves a pawn across the board. Doesn't check anything
+ * @param rfrom The source row
+ * @param cfrom The source column
+ * @param rto The destination row
+ * @param cto The destination column
+ */
+void movePawnAtTo(int rfrom, int cfrom, int rto, int cto){
+    Pawn *p = getPawnAt(rfrom, cfrom);
+    if(p == NULL) return;
+
+    Pawn *pto = getPawnAt(rto, cto);
+    if(pto != NULL){
+        destroyPawnAt(rto, cto);
+    }
+
+    placePawnAt(p, rto, cto);
+    placePawnAt(NULL, rfrom, cfrom);
+}
+
+/**
  * Checks whether the given field can host a pawn
  * @param row A coordinate of the field to check
  * @param col A coordinate of the field to check
