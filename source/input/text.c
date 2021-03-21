@@ -107,6 +107,9 @@ void handleError(int err_code){
         case MOVE_TOO_MANY_OBSTACLES_FOR_KING:
             printf("There are too many obstacles for the king along this move.\n");
             break;
+        case BOARD_MUST_MOVE_ANOTHER_PAWN:
+            printf("You have to move a different pawn.\n");
+            break;
         default:
             printf("An unknown error occured. Code: %d\n", err_code);
             break;
