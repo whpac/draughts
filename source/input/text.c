@@ -110,6 +110,9 @@ void handleError(int err_code){
         case BOARD_MUST_MOVE_ANOTHER_PAWN:
             printf("You have to move a different pawn.\n");
             break;
+        case BOARD_MOVE_NOT_OPTIMAL:
+            printf("There's another move with more kills.\n");
+            break;
         default:
             printf("An unknown error occured. Code: %d\n", err_code);
             break;

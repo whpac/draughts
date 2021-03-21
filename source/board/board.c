@@ -122,16 +122,19 @@ void destroyPawnAt(int row, int col){
  * @param cto The destination column
  */
 int movePawnAtTo(int rfrom, int cfrom, int rto, int cto){
+    Pawn *p = getPawnAt(rfrom, cfrom);
+    if(p == NULL) return MOVE_NO_SOURCE_PAWN;
+
     if(isMoveRestricted()){
         if(rfrom != restrictedRow || cfrom != restrictedCol)
             return BOARD_MUST_MOVE_ANOTHER_PAWN;
+    }else{
+        if(!isOptimalMove(p, rfrom, cfrom, rto, cto))
+            return BOARD_MOVE_NOT_OPTIMAL;
     }
 
     int res = checkMove(rfrom, cfrom, rto, cto);
     if(res != MOVE_LEGAL) return res;
-
-    Pawn *p = getPawnAt(rfrom, cfrom);
-    if(p == NULL) return MOVE_NO_SOURCE_PAWN;
 
     placePawnAt(p, rto, cto);
     placePawnAt(NULL, rfrom, cfrom);
