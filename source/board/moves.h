@@ -11,6 +11,7 @@
 #define MOVE_TOO_LONG 3007
 #define MOVE_CANNOT_KILL_OWN 3008
 #define MOVE_CANNOT_MOVE_OPPONENTS_PAWN 3009
+#define MOVE_TOO_MANY_OBSTACLES_FOR_KING 3010
 
 int checkMove(int rfrom, int cfrom, int rto, int cto);
 

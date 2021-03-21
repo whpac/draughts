@@ -8,6 +8,7 @@ char doInputIteration();
 int getIntArg();
 void handleError();
 
+/** Pointer to a function responsible for displaying the game board */
 void (*boardDisplay)();
 
 /**
@@ -43,6 +44,10 @@ char doInputIteration(){
     return 1;
 }
 
+/**
+ * Displays an error message appropriate to the code
+ * @param err_code The error code
+ */
 void handleError(int err_code){
     switch(err_code){
         case CMD_PROC_SUCCESSFUL:
@@ -76,6 +81,9 @@ void handleError(int err_code){
             break;
         case MOVE_CANNOT_MOVE_OPPONENTS_PAWN:
             printf("You cannot move your opponent's pawn.\n");
+            break;
+        case MOVE_TOO_MANY_OBSTACLES_FOR_KING:
+            printf("There are too many obstacles for the king along this move.\n");
             break;
         default:
             printf("An unknown error occured. Code: %d\n", err_code);

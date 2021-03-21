@@ -5,6 +5,7 @@
 
 int checkOnlyForward(Pawn* p, int rfrom, int cfrom, int rto, int cto);
 int checkProperDistance(Pawn* p, int rfrom, int cfrom, int rto, int cto);
+int checkKingObstacles(Pawn* p, int rfrom, int cfrom, int rto, int cto);
 
 /**
  * Checks whether a move (rfrom, cfrom) -> (rto, cto) is legal.
@@ -33,6 +34,9 @@ int checkMove(int rfrom, int cfrom, int rto, int cto){
     if(chk != MOVE_LEGAL) return chk;
 
     chk = checkProperDistance(p, rfrom, cfrom, rto, cto);
+    if(chk != MOVE_LEGAL) return chk;
+
+    chk = checkKingObstacles(p, rfrom, cfrom, rto, cto);
     if(chk != MOVE_LEGAL) return chk;
 
     return MOVE_LEGAL;
@@ -95,4 +99,36 @@ int checkProperDistance(Pawn* p, int rfrom, int cfrom, int rto, int cto){
     }
 
     return MOVE_TOO_LONG;
+}
+
+/**
+ * Checks obstacles along a king's move. An obstacle is: pawn of the same color as 
+ * the king or more than one pawn of the other color (even if separated by a blank field). 
+ * The separation is considered an obstacle, because killing two pawns requires two consecutive moves.
+ * @param p The pawn that is being moved
+ * @param rfrom The source row
+ * @param cfrom The source column
+ * @param rto The destination row
+ * @param cto The destination column
+ */
+int checkKingObstacles(Pawn* p, int rfrom, int cfrom, int rto, int cto){
+    if(!isPawnKing(p)) return MOVE_LEGAL;
+
+    int rdir = 1, cdir = 1;
+    if(rfrom > rto) rdir = -1;
+    if(cfrom > cto) cdir = -1;
+
+    int len = rdir * (rto - rfrom);
+    int opponents_met = 0;
+    for(int i = 1; i < len; i++){
+        Pawn* p_mid = getPawnAt(rfrom + i*rdir, cfrom + i*cdir);
+        if(p_mid == NULL) continue;
+
+        if(getPawnColor(p_mid) == getPawnColor(p)) return MOVE_CANNOT_KILL_OWN;
+        else opponents_met++;
+
+        if(opponents_met > 1) return MOVE_TOO_MANY_OBSTACLES_FOR_KING;
+    }
+
+    return MOVE_LEGAL;
 }
