@@ -2,7 +2,7 @@
 #include "board.h"
 #include "moves.h"
 
-#define BOARD_SIZE 8
+#define BOARD_SIZE 4
 #define BOARD_FIELDS BOARD_SIZE * BOARD_SIZE
 
 Pawn* board[BOARD_FIELDS];
@@ -41,6 +41,15 @@ char isInBoard(int row, int col){
     if(row >= BOARD_SIZE || col >= BOARD_SIZE) return 0;
 
     return 1;
+}
+
+/**
+ * Checks whether the given field can host a pawn
+ * @param row A coordinate of the field to check
+ * @param col A coordinate of the field to check
+ */
+char isPlayableField(int row, int col){
+    return (row + col) % 2 == 1;
 }
 
 /**
@@ -114,12 +123,21 @@ int movePawnAtTo(int rfrom, int cfrom, int rto, int cto){
 }
 
 /**
- * Checks whether the given field can host a pawn
- * @param row A coordinate of the field to check
- * @param col A coordinate of the field to check
+ * Kills all pawns that are between (rfrom, cfrom) and (rto, cto).
+ * @param rfrom The source row
+ * @param cfrom The source column
+ * @param rto The destination row
+ * @param cto The destination column
  */
-char isPlayableField(int row, int col){
-    return (row + col) % 2 == 1;
+void killPawnsAlongMove(int rfrom, int cfrom, int rto, int cto){
+    int rdir = 1, cdir = 1;
+    if(rfrom > rto) rdir = -1;
+    if(cfrom > cto) cdir = -1;
+
+    int len = rdir * (rto - rfrom);
+    for(int i = 1; i < len; i++){
+        destroyPawnAt(rfrom + i*rdir, cfrom + i*cdir);
+    }
 }
 
 /**
@@ -152,19 +170,19 @@ void createStartLayout(){
 }
 
 /**
- * Kills all pawns that are between (rfrom, cfrom) and (rto, cto).
- * @param rfrom The source row
- * @param cfrom The source column
- * @param rto The destination row
- * @param cto The destination column
+ * Counts pawns of a given color that are still on the board.
+ * @param color The color of pawns to count
  */
-void killPawnsAlongMove(int rfrom, int cfrom, int rto, int cto){
-    int rdir = 1, cdir = 1;
-    if(rfrom > rto) rdir = -1;
-    if(cfrom > cto) cdir = -1;
+int countPawnsOfColor(PawnColor color){
+    int count = 0;
+    for(int row = 0; row < BOARD_SIZE; row++){
+        for(int col = 0; col < BOARD_SIZE; col++){
+            Pawn* p = getPawnAt(row, col);
+            if(p == NULL) continue;
 
-    int len = rdir * (rto - rfrom);
-    for(int i = 1; i < len; i++){
-        destroyPawnAt(rfrom + i*rdir, cfrom + i*cdir);
+            if(getPawnColor(p) == color) count++;
+        }
     }
+
+    return count;
 }
