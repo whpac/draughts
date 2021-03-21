@@ -43,6 +43,24 @@ int checkMove(int rfrom, int cfrom, int rto, int cto){
 }
 
 /**
+ * Calculates the move length. If the move is not diagonal, returns -1.
+ * @param rfrom The source row
+ * @param cfrom The source column
+ * @param rto The destination row
+ * @param cto The destination column
+ */
+int getMoveLength(int rfrom, int cfrom, int rto, int cto){
+    int dr = rfrom - rto;
+    int dc = cfrom - cto;
+
+    if(dr < 0) dr *= -1;
+    if(dc < 0) dc *= -1;
+
+    if(dr != dc) return -1;
+    return dr;
+}
+
+/**
  * Checks if the move is forward for the given pawn color. This analysis 
  * is done only for moves that are one short jump long. What's more, 
  * kings are extempt from the check - they can move backwards.
@@ -78,17 +96,13 @@ int checkOnlyForward(Pawn* p, int rfrom, int cfrom, int rto, int cto){
  * @param cto The destination column
  */
 int checkProperDistance(Pawn* p, int rfrom, int cfrom, int rto, int cto){
-    int dr = rfrom - rto;
-    int dc = cfrom - cto;
+    int len = getMoveLength(rfrom, cfrom, rto, cto);
 
-    if(dr < 0) dr *= -1;
-    if(dc < 0) dc *= -1;
-
-    if(dr != dc) return MOVE_MUST_BE_DIAGONAL;
+    if(len == -1) return MOVE_MUST_BE_DIAGONAL;
     if(isPawnKing(p)) return MOVE_LEGAL;
 
-    if(dr == 1) return MOVE_LEGAL;
-    if(dr == 2){
+    if(len == 1) return MOVE_LEGAL;
+    if(len == 2){
         int rkill = (rfrom + rto) / 2;
         int ckill = (cfrom + cto) / 2;
         Pawn* killed = getPawnAt(rkill, ckill);

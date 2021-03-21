@@ -14,5 +14,6 @@
 #define MOVE_TOO_MANY_OBSTACLES_FOR_KING 3010
 
 int checkMove(int rfrom, int cfrom, int rto, int cto);
+int getMoveLength(int rfrom, int cfrom, int rto, int cto);
 
 #endif
