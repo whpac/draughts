@@ -3,7 +3,7 @@
 #include "board.h"
 #include "moves.h"
 
-char isManAbleToKill(int row, int col);
+char isManAbleToKill(Pawn* p, int row, int col);
 char isKingAbleToKill(Pawn* p, int row, int col);
 
 /**
@@ -14,19 +14,30 @@ char isKingAbleToKill(Pawn* p, int row, int col);
  */
 char isPawnAbleToKill(Pawn* p, int row, int col){
     if(isPawnKing(p)) return isKingAbleToKill(p, row, col);
-    else return isManAbleToKill(row, col);
+    else return isManAbleToKill(p, row, col);
 }
 
 /**
  * Checks whether the man is able to kill any pawn on the board
+ * @param p The man to be checked
  * @param row The row the pawn is located in
  * @param col The column the pawn is located in
  */
-char isManAbleToKill(int row, int col){
-    if(checkMove(row, col, row+2, col+2) == MOVE_LEGAL) return 1;
-    if(checkMove(row, col, row+2, col-2) == MOVE_LEGAL) return 1;
-    if(checkMove(row, col, row-2, col+2) == MOVE_LEGAL) return 1;
-    if(checkMove(row, col, row-2, col-2) == MOVE_LEGAL) return 1;
+char isManAbleToKill(Pawn* p, int row, int col){
+    int rdir[4] = {1, 1, -1, -1};
+    int cdir[4] = {1, -1, 1, -1};
+
+    for(int i = 0; i < 4; i++){
+        Pawn* killed = getPawnAt(row + rdir[i], col + cdir[i]);
+
+        if(killed == NULL) continue;
+        if(getPawnColor(killed) == getPawnColor(p)) continue;
+
+        if(!isInBoard(row + 2*rdir[i], col + 2*cdir[i])) continue;
+
+        Pawn* behind_killed = getPawnAt(row + 2*rdir[i], col + 2*cdir[i]);
+        if(behind_killed == NULL) return 1;
+    }
     return 0;
 }
 
