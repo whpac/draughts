@@ -2,7 +2,7 @@
 #include "board.h"
 #include "moves.h"
 
-#define BOARD_SIZE 4
+#define BOARD_SIZE 8
 #define BOARD_FIELDS BOARD_SIZE * BOARD_SIZE
 
 Pawn* board[BOARD_FIELDS];
