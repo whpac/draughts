@@ -1,20 +1,25 @@
 #include<stddef.h>
 #include "board.h"
 #include "moves.h"
+#include "kills.h"
 
 #define BOARD_SIZE 8
 #define BOARD_FIELDS BOARD_SIZE * BOARD_SIZE
 
 Pawn* board[BOARD_FIELDS];
 PawnColor nextMoveColor;
+int restrictedRow, restrictedCol;
 
-void killPawnsAlongMove(int rfrom, int cfrom, int rto, int cto);
+void restrictMovedPawn(int rfrom, int cfrom);
+char isMoveRestricted();
+int killPawnsAlongMove(int rfrom, int cfrom, int rto, int cto);
 
 /**
  * Initializes the empty game board
  */
 void initBoard(){
     nextMoveColor = white;
+    restrictedRow = restrictedCol = -1;
     for(int i = 0; i < BOARD_FIELDS; i++){
         board[i] = NULL;
     }
@@ -50,6 +55,26 @@ char isInBoard(int row, int col){
  */
 char isPlayableField(int row, int col){
     return (row + col) % 2 == 1;
+}
+
+/**
+ * Restricts the pawn that can be moved to the one specified by the coordinates
+ * @param rfrom The row the allowed pawn is located in
+ * @param cfrom The column the allowed pawn is located in
+ */
+void restrictMovedPawn(int rfrom, int cfrom){
+    if(rfrom == -1) cfrom = -1;
+    else if(cfrom == -1) rfrom = -1;
+
+    restrictedRow = rfrom;
+    restrictedCol = cfrom;
+}
+
+/**
+ * Checks if the move is restricted.
+ */
+char isMoveRestricted(){
+    return (restrictedRow != -1) && (restrictedCol != -1);
 }
 
 /**
@@ -97,6 +122,11 @@ void destroyPawnAt(int row, int col){
  * @param cto The destination column
  */
 int movePawnAtTo(int rfrom, int cfrom, int rto, int cto){
+    if(isMoveRestricted()){
+        if(rfrom != restrictedRow || cfrom != restrictedCol)
+            return BOARD_MUST_MOVE_ANOTHER_PAWN;
+    }
+
     int res = checkMove(rfrom, cfrom, rto, cto);
     if(res != MOVE_LEGAL) return res;
 
@@ -106,11 +136,14 @@ int movePawnAtTo(int rfrom, int cfrom, int rto, int cto){
     placePawnAt(p, rto, cto);
     placePawnAt(NULL, rfrom, cfrom);
 
-    killPawnsAlongMove(rfrom, cfrom, rto, cto);
+    int kills = killPawnsAlongMove(rfrom, cfrom, rto, cto);
 
-    // TODO: Check if there are more pawns to kill
-    if(0){
-        return BOARD_MOVE_NOT_FINISHED;
+    // Check if there are more pawns to kill, but only if the previous move was a kill
+    if(kills > 0){
+        if(isPawnAbleToKill(p, rto, cto)){
+            restrictMovedPawn(rto, cto);
+            return BOARD_MOVE_NOT_FINISHED;
+        }
     }
 
     PawnColor c = getPawnColor(p);
@@ -118,6 +151,7 @@ int movePawnAtTo(int rfrom, int cfrom, int rto, int cto){
     if(c == black && rto == 0) transformToKing(p);
 
     nextMoveColor = !nextMoveColor;
+    restrictMovedPawn(-1, -1);
 
     return BOARD_MOVE_SUCCESSFUL;
 }
@@ -129,15 +163,22 @@ int movePawnAtTo(int rfrom, int cfrom, int rto, int cto){
  * @param rto The destination row
  * @param cto The destination column
  */
-void killPawnsAlongMove(int rfrom, int cfrom, int rto, int cto){
+int killPawnsAlongMove(int rfrom, int cfrom, int rto, int cto){
     int rdir = 1, cdir = 1;
     if(rfrom > rto) rdir = -1;
     if(cfrom > cto) cdir = -1;
 
     int len = rdir * (rto - rfrom);
+    Pawn* p;
+    int cnt = 0;
     for(int i = 1; i < len; i++){
+        p = getPawnAt(rfrom + i*rdir, cfrom + i*cdir);
+        if(p == NULL) continue;
+
         destroyPawnAt(rfrom + i*rdir, cfrom + i*cdir);
+        cnt++;
     }
+    return cnt;
 }
 
 /**

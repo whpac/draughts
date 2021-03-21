@@ -5,6 +5,7 @@
 
 #define BOARD_MOVE_SUCCESSFUL 1000
 #define BOARD_MOVE_NOT_FINISHED 1001
+#define BOARD_MUST_MOVE_ANOTHER_PAWN 1002
 
 void initBoard();
 int getBoardSize();
