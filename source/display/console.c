@@ -10,6 +10,9 @@ void displayBoard(){
         printf("-");
     printf("+\n");
 
+    int white_cnt = countPawnsOfColor(white);
+    int black_cnt = countPawnsOfColor(black);
+
     for(int row = 0; row < size; row++){
         printf("%d|", row);
         for(int col = 0; col < size; col++){
@@ -27,7 +30,11 @@ void displayBoard(){
                 printf("%c", isPawnKing(p) ? 'W' : 'w');
             }
         }
-        printf("|\n");
+        printf("|   ");
+
+        if(row == 0) printf("WHITE has %2d pawns", white_cnt);
+        if(row == 1) printf("BLACK has %2d pawns", black_cnt);
+        printf("\n");
     }
 
     printf(" +");
@@ -40,5 +47,6 @@ void displayBoard(){
         printf("%d", i);
     printf("\n");
 
-    printf("It's %s's move.\n", getNextMoveColor() == white ? "WHITE" : "BLACK");
+    if(white_cnt > 0 && black_cnt > 0)
+        printf("It's %s's move.\n", getNextMoveColor() == white ? "WHITE" : "BLACK");
 }

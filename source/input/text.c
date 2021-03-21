@@ -5,8 +5,9 @@
 #include "../board/moves.h"
 
 char doInputIteration();
-int getIntArg();
+void handleVictory(int white_count, int black_count);
 void handleError();
+int getIntArg();
 
 /** Pointer to a function responsible for displaying the game board */
 void (*boardDisplay)();
@@ -29,6 +30,13 @@ char doInputIteration(){
     printf("Current board:\n");
     (*boardDisplay)();
 
+    int white_cnt = countPawnsOfColor(white);
+    int black_cnt = countPawnsOfColor(black);
+    if(white_cnt == 0 || black_cnt == 0){
+        handleVictory(white_cnt, black_cnt);
+        return 0;
+    }
+
     char help_char = getHelpChar();
     char cmd = help_char;
     int process_res = CMD_PROC_SUCCESSFUL;
@@ -42,6 +50,20 @@ char doInputIteration(){
     }while(process_res != CMD_PROC_SUCCESSFUL || cmd == help_char);
 
     return 1;
+}
+
+/**
+ * Handles the plight when one of the players has lost his all pawns.
+ * @param white_count The number of pawns the white has
+ * @param black_count The number of pawns the black has
+ */
+void handleVictory(int white_count, int black_count){
+    if(white_count == 0){
+        printf("Victory! BLACK has won the game (%d:0).\n", black_count);
+    }
+    if(black_count == 0){
+        printf("Victory! WHITE has won the game (%d:0).\n", white_count);
+    }
 }
 
 /**
