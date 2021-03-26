@@ -1,18 +1,40 @@
 #include<stddef.h>
+#include<malloc.h>
+
 #include "board.h"
 #include "moves.h"
 #include "kills.h"
+#include "../data/stack.h"
 
 #define BOARD_SIZE 8
-#define BOARD_FIELDS BOARD_SIZE * BOARD_SIZE
+#define BOARD_FIELDS (BOARD_SIZE * BOARD_SIZE)
+
+typedef struct MoveDescriptor {
+    Pawn* movedPawn;
+    int fromRow;
+    int fromCol;
+    int toRow;
+    int toCol;
+    char wasPawnKing;
+    Pawn* killedPawn;
+    int killedRow;
+    int killedCol;
+} MoveDescriptor;
+
+typedef struct PawnWithPosition {
+    Pawn* pawn;
+    int row;
+    int col;
+} PawnWithPosition;
 
 Pawn* board[BOARD_FIELDS];
 PawnColor nextMoveColor;
 int restrictedRow, restrictedCol;
+Stack* movesHistory;
 
 void restrictMovedPawn(int rfrom, int cfrom);
 char isMoveRestricted();
-int killPawnsAlongMove(int rfrom, int cfrom, int rto, int cto);
+PawnWithPosition* killPawnAlongMove(int rfrom, int cfrom, int rto, int cto);
 
 /**
  * Initializes the empty game board
@@ -20,6 +42,7 @@ int killPawnsAlongMove(int rfrom, int cfrom, int rto, int cto);
 void initBoard(){
     nextMoveColor = white;
     restrictedRow = restrictedCol = -1;
+    movesHistory = stackCreate();
     for(int i = 0; i < BOARD_FIELDS; i++){
         board[i] = NULL;
     }
@@ -104,7 +127,10 @@ void placePawnAt(Pawn* pawn, int row, int col){
  * Destroys a pawn that is places at the given position
  * @param row The row where the pawn is placed
  * @param col The column where the pawn is placed
+ * @deprecated
  */
+/*
+! Deprecated. Since killed pawns are stored in move history, they cannot be removed from the memory
 void destroyPawnAt(int row, int col){
     Pawn* p = getPawnAt(row, col);
     if(p == NULL) return;
@@ -112,6 +138,7 @@ void destroyPawnAt(int row, int col){
     placePawnAt(NULL, row, col);
     destroyPawn(p);
 }
+*/
 
 /**
  * Moves a pawn across the board. It prevents from moving a pawn to 
@@ -136,13 +163,26 @@ int movePawnAtTo(int rfrom, int cfrom, int rto, int cto){
     int res = checkMove(rfrom, cfrom, rto, cto);
     if(res != MOVE_LEGAL) return res;
 
+    MoveDescriptor* md = malloc(sizeof(MoveDescriptor));
+    md->movedPawn = p;
+    md->fromRow = rfrom;
+    md->fromCol = cfrom;
+    md->toRow = rto;
+    md->toCol = cto;
+    md->wasPawnKing = isPawnKing(p);
+
     placePawnAt(p, rto, cto);
     placePawnAt(NULL, rfrom, cfrom);
 
-    int kills = killPawnsAlongMove(rfrom, cfrom, rto, cto);
+    stackPush(movesHistory, md);
+
+    PawnWithPosition* killed_pawn = killPawnAlongMove(rfrom, cfrom, rto, cto);
+    md->killedPawn = killed_pawn->pawn;
+    md->killedRow = killed_pawn->row;
+    md->killedCol = killed_pawn->col;
 
     // Check if there are more pawns to kill, but only if the previous move was a kill
-    if(kills > 0){
+    if(killed_pawn->pawn != NULL){
         if(isPawnAbleToKill(p, rto, cto)){
             restrictMovedPawn(rto, cto);
             return BOARD_MOVE_NOT_FINISHED;
@@ -150,8 +190,8 @@ int movePawnAtTo(int rfrom, int cfrom, int rto, int cto){
     }
 
     PawnColor c = getPawnColor(p);
-    if(c == white && rto == BOARD_SIZE - 1) transformToKing(p);
-    if(c == black && rto == 0) transformToKing(p);
+    if(c == white && rto == BOARD_SIZE - 1) setIsPawnKing(p, 1);
+    if(c == black && rto == 0) setIsPawnKing(p, 1);
 
     nextMoveColor = !nextMoveColor;
     restrictMovedPawn(-1, -1);
@@ -160,28 +200,51 @@ int movePawnAtTo(int rfrom, int cfrom, int rto, int cto){
 }
 
 /**
- * Kills all pawns that are between (rfrom, cfrom) and (rto, cto).
+ * Kills all pawns that are between (rfrom, cfrom) and (rto, cto). 
+ * According to the rules and move checker, the is always at most one pawn killed at the move. 
+ * That's why the returned value is not an array or other list. 
+ * Returns the killed pawn and its position.
  * @param rfrom The source row
  * @param cfrom The source column
  * @param rto The destination row
  * @param cto The destination column
  */
-int killPawnsAlongMove(int rfrom, int cfrom, int rto, int cto){
+PawnWithPosition* killPawnAlongMove(int rfrom, int cfrom, int rto, int cto){
     int rdir = 1, cdir = 1;
     if(rfrom > rto) rdir = -1;
     if(cfrom > cto) cdir = -1;
 
     int len = rdir * (rto - rfrom);
     Pawn* p;
-    int cnt = 0;
+    PawnWithPosition* pwp = malloc(sizeof(PawnWithPosition));
+    pwp->pawn = NULL;
+    pwp->row = pwp->col = -1;
+
     for(int i = 1; i < len; i++){
-        p = getPawnAt(rfrom + i*rdir, cfrom + i*cdir);
+        int curr_r = rfrom + i*rdir;
+        int curr_c = cfrom + i*cdir;
+
+        p = getPawnAt(curr_r, curr_c);
         if(p == NULL) continue;
 
-        destroyPawnAt(rfrom + i*rdir, cfrom + i*cdir);
-        cnt++;
+        placePawnAt(NULL, curr_r, curr_c);
+        pwp->pawn = p;
+        pwp->row = curr_r;
+        pwp->col = curr_c;
     }
-    return cnt;
+    return pwp;
+}
+
+void undoMove(){
+    MoveDescriptor* md = stackPop(movesHistory);
+    if(md == NULL) return;
+
+    placePawnAt(md->movedPawn, md->fromRow, md->fromCol);
+    placePawnAt(NULL, md->toRow, md->toCol);
+    setIsPawnKing(md->movedPawn, md->wasPawnKing);
+    placePawnAt(md->killedPawn, md->killedRow, md->killedCol);
+
+    nextMoveColor = getPawnColor(md->movedPawn);
 }
 
 /**
