@@ -235,6 +235,7 @@ PawnWithPosition* killPawnAlongMove(int rfrom, int cfrom, int rto, int cto){
     return pwp;
 }
 
+/** Discards the recently made move */
 void undoMove(){
     MoveDescriptor* md = stackPop(movesHistory);
     if(md == NULL) return;
@@ -245,6 +246,9 @@ void undoMove(){
     placePawnAt(md->killedPawn, md->killedRow, md->killedCol);
 
     nextMoveColor = getPawnColor(md->movedPawn);
+
+    // This move descriptor is not useful anymore.
+    free(md);
 }
 
 /**
