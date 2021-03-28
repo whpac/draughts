@@ -16,6 +16,7 @@ typedef struct MoveDescriptor {
     int toRow;
     int toCol;
     char wasPawnKing;
+    char wasMoveRestricted;
     Pawn* killedPawn;
     int killedRow;
     int killedCol;
@@ -170,6 +171,7 @@ int movePawnAtTo(int rfrom, int cfrom, int rto, int cto){
     md->toRow = rto;
     md->toCol = cto;
     md->wasPawnKing = isPawnKing(p);
+    md->wasMoveRestricted = isMoveRestricted();
 
     placePawnAt(p, rto, cto);
     placePawnAt(NULL, rfrom, cfrom);
@@ -244,6 +246,12 @@ void undoMove(){
     placePawnAt(NULL, md->toRow, md->toCol);
     setIsPawnKing(md->movedPawn, md->wasPawnKing);
     placePawnAt(md->killedPawn, md->killedRow, md->killedCol);
+
+    if(md->wasMoveRestricted){
+        restrictMovedPawn(md->fromRow, md->fromCol);
+    }else{
+        restrictMovedPawn(-1, -1);
+    }
 
     nextMoveColor = getPawnColor(md->movedPawn);
 
