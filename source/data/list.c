@@ -137,7 +137,8 @@ void listSet(List* l, int index, void* new_content, char free_old){
 }
 
 /**
- * Adds the passed value to the end of the list
+ * Adds the passed value to the end of the list.
+ * Returns the index of the newly-inserted element.
  * @param l The list
  * @param content The value to be added
  */
@@ -146,7 +147,7 @@ int listAdd(List* l, void* content){
     if(le == NULL) return -1;
     le->content = content;
 
-    listAddElement(l, le);
+    return listAddElement(l, le);
 }
 
 /**
