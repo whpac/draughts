@@ -5,6 +5,7 @@ typedef struct ListElement ListElement;
 
 struct List {
     ListElement* first;
+    int length;
 };
 
 struct ListElement {
@@ -21,6 +22,7 @@ List* listCreate(){
     if(l == NULL) return NULL;
 
     l->first = NULL;
+    l->length = 0;
     return l;
 }
 
@@ -30,9 +32,11 @@ List* listCreate(){
  * @param free_content Whether to free the space occupied by contents of each element
  */
 void listDestroy(List* l, char free_content){
-    while(l->first != NULL){
-        listRemoveElement(l, 0, free_content);
+    if(l == NULL) return;
+    while(l->length > 0){
+        listRemove(l, 0, free_content);
     }
+    free(l);
 }
 
 /**
@@ -57,6 +61,9 @@ ListElement* listGetElement(List* l, int index){
  * @param element The element to add
  */
 int listAddElement(List* l, ListElement* element){
+    if(l == NULL) return 0;
+
+    l->length++;
     element->next = NULL;
     if(l->first == NULL){
         l->first = element;
@@ -79,23 +86,26 @@ int listAddElement(List* l, ListElement* element){
  * @param index Index of the element to remove
  * @param free_content Whether to free the space occupied by the element's content
  */
-void listRemoveElement(List* l, int index, char free_content){
-    ListElement** link_to_removed;
+void listRemove(List* l, int index, char free_content){
+    if(l == NULL) return;
+
+    ListElement* removed;
     if(index <= 0){
         if(l->first == NULL) return;
-        link_to_removed = &(l->first);
+        removed = l->first;
+        l->first = removed->next;
     }else{
         ListElement* le = listGetElement(l, index-1);
         if(le == NULL) return;
         if(le->next == NULL) return;
-        link_to_removed = &(le->next);
-    }
 
-    ListElement* removed = *link_to_removed;
-    *link_to_removed = removed->next;
+        removed = le->next;
+        le->next = removed->next;
+    }
 
     if(free_content) free(removed->content);
     free(removed);
+    l->length--;
 }
 
 /**
@@ -137,4 +147,13 @@ int listAdd(List* l, void* content){
     le->content = content;
 
     listAddElement(l, le);
+}
+
+/**
+ * Returns the length of a list
+ * @param l The list
+ */
+int listGetLength(List* l){
+    if(l == NULL) return 0;
+    return l->length;
 }
