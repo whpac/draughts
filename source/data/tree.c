@@ -102,3 +102,18 @@ void treeRemoveChildNode(TreeNode* parent, TreeNode* child, char free_memory){
         break;
     }
 }
+
+/**
+ * Returns the depth of the tree
+ * @param t The tree
+ */
+int treeGetDepth(TreeNode* t){
+    int max_depth = -1;         // So that the depth of an empty tree is 0
+    for(int i = 0; i < treeGetChildNodesCount(t); i++){
+        TreeNode* subtree = treeGetChildNode(t, i);
+        int depth = treeGetDepth(subtree);
+        if(depth > max_depth) max_depth = depth;
+    }
+
+    return max_depth+1;
+}

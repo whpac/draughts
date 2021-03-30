@@ -11,5 +11,6 @@ TreeNode* treeGetChildNode(TreeNode* t, int index);
 int treeGetChildNodesCount(TreeNode* t);
 int treeAddChildNode(TreeNode* parent, TreeNode* child);
 void treeRemoveChildNode(TreeNode* parent, TreeNode* child, char free_memory);
+int treeGetDepth(TreeNode* t);
 
 #endif
