@@ -103,9 +103,9 @@ int checkProperDistance(Pawn* p, int rfrom, int cfrom, int rto, int cto){
 
     if(len == 1) return MOVE_LEGAL;
     if(len == 2){
-        int rkill = (rfrom + rto) / 2;
-        int ckill = (cfrom + cto) / 2;
-        Pawn* killed = getPawnAt(rkill, ckill);
+        Position* killed_pawn = getPawnAlongMove(rfrom, cfrom, rto, cto);
+        Pawn* killed = positionGetPawn(killed_pawn);
+        positionDestroy(killed_pawn);
 
         if(killed == NULL) return MOVE_TOO_LONG;
         if(getPawnColor(killed) == getPawnColor(p)) return MOVE_CANNOT_KILL_OWN;
@@ -145,4 +145,35 @@ int checkKingObstacles(Pawn* p, int rfrom, int cfrom, int rto, int cto){
     }
 
     return MOVE_LEGAL;
+}
+
+/**
+ * Returns the pawn that is placed in the middle of move. If it happens that 
+ * there are more pawns that one, the last is returned. However, according to the rules, 
+ * there will always be only one pawn along a killing move.
+ * @param rfrom The source row
+ * @param cfrom The source column
+ * @param rto The target row
+ * @param cto The target column
+ */
+Position* getPawnAlongMove(int rfrom, int cfrom, int rto, int cto){
+    int rdir = 1, cdir = 1;
+    if(rfrom > rto) rdir = -1;
+    if(cfrom > cto) cdir = -1;
+
+    int len = rdir * (rto - rfrom);
+    Pawn* p;
+    Position* pos = positionCreate(-1, -1, NULL);
+
+    for(int i = 1; i < len; i++){
+        int curr_r = rfrom + i*rdir;
+        int curr_c = cfrom + i*cdir;
+
+        p = getPawnAt(curr_r, curr_c);
+        if(p == NULL) continue;
+
+        positionDestroy(pos);
+        pos = positionCreate(curr_r, curr_c, p);
+    }
+    return pos;
 }

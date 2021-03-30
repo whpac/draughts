@@ -195,6 +195,8 @@ int movePawnAtTo(Pawn* p, int rfrom, int cfrom, int rto, int cto){
     md->killedPawn = positionGetPawn(killed_pawn);
     md->killedRow = positionGetRow(killed_pawn);
     md->killedCol = positionGetColumn(killed_pawn);
+    positionDestroy(killed_pawn);
+    killed_pawn = NULL;
 
     // Check if there are more pawns to kill, but only if the previous move was a kill
     if(md->killedPawn != NULL){
@@ -215,8 +217,8 @@ int movePawnAtTo(Pawn* p, int rfrom, int cfrom, int rto, int cto){
 }
 
 /**
- * Kills all pawns that are between (rfrom, cfrom) and (rto, cto). 
- * According to the rules and move checker, the is always at most one pawn killed at the move. 
+ * Kills a pawn that is between (rfrom, cfrom) and (rto, cto). 
+ * According to the rules and move checker, there is always at most one pawn killed during the move. 
  * That's why the returned value is not an array or other list. 
  * Returns the killed pawn and its position.
  * @param rfrom The source row
@@ -225,27 +227,14 @@ int movePawnAtTo(Pawn* p, int rfrom, int cfrom, int rto, int cto){
  * @param cto The destination column
  */
 Position* killPawnAlongMove(int rfrom, int cfrom, int rto, int cto){
-    int rdir = 1, cdir = 1;
-    if(rfrom > rto) rdir = -1;
-    if(cfrom > cto) cdir = -1;
+    Position* killed = getPawnAlongMove(rfrom, cfrom, rto, cto);
+    int killed_row = positionGetRow(killed);
+    int killed_col = positionGetColumn(killed);
 
-    int len = rdir * (rto - rfrom);
-    Pawn* p;
-    Position* pwp = positionCreate(-1, -1, NULL);
-
-    for(int i = 1; i < len; i++){
-        int curr_r = rfrom + i*rdir;
-        int curr_c = cfrom + i*cdir;
-
-        p = getPawnAt(curr_r, curr_c);
-        if(p == NULL) continue;
-
-        placePawnAt(NULL, curr_r, curr_c);
-
-        positionDestroy(pwp);
-        pwp = positionCreate(curr_r, curr_c, p);
+    if(killed_col >= 0 && killed_row >= 0){
+        placePawnAt(NULL, killed_row, killed_col);
     }
-    return pwp;
+    return killed;
 }
 
 /** Discards the recently made move */
