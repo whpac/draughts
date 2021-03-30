@@ -54,7 +54,7 @@ void printHelp(){
  * @param cto The destination column
  */
 int movePawn(int rfrom, int cfrom, int rto, int cto){
-    int res = movePawnAtTo(rfrom, cfrom, rto, cto);
+    int res = attemptMovePawnAtTo(rfrom, cfrom, rto, cto);
     if(res == BOARD_MOVE_SUCCESSFUL || res == BOARD_MOVE_NOT_FINISHED) return CMD_PROC_SUCCESSFUL;
     return res;
 }
