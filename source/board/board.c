@@ -4,7 +4,9 @@
 #include "board.h"
 #include "moves.h"
 #include "kills.h"
+#include "position.h"
 #include "../data/stack.h"
+#include "../data/tree.h"
 
 #define BOARD_SIZE 8
 #define BOARD_FIELDS (BOARD_SIZE * BOARD_SIZE)
@@ -22,12 +24,6 @@ typedef struct MoveDescriptor {
     int killedCol;
 } MoveDescriptor;
 
-typedef struct PawnWithPosition {
-    Pawn* pawn;
-    int row;
-    int col;
-} PawnWithPosition;
-
 Pawn* board[BOARD_FIELDS];
 PawnColor nextMoveColor;
 int restrictedRow, restrictedCol;
@@ -35,7 +31,7 @@ Stack* movesHistory;
 
 void restrictMovedPawn(int rfrom, int cfrom);
 char isMoveRestricted();
-PawnWithPosition* killPawnAlongMove(int rfrom, int cfrom, int rto, int cto);
+Position* killPawnAlongMove(int rfrom, int cfrom, int rto, int cto);
 
 /**
  * Initializes the empty game board
@@ -142,17 +138,19 @@ void destroyPawnAt(int row, int col){
 */
 
 /**
- * Moves a pawn across the board. It prevents from moving a pawn to 
- * an unplayable field or to an occupied one.
+ * Attempts to move a pawn across the board. It prevents from moving a pawn to 
+ * an unplayable field or to an occupied one. What's more, it does a check whether 
+ * the attempted move is optimal.
  * @param rfrom The source row
  * @param cfrom The source column
  * @param rto The destination row
  * @param cto The destination column
  */
-int movePawnAtTo(int rfrom, int cfrom, int rto, int cto){
+int attemptMovePawnAtTo(int rfrom, int cfrom, int rto, int cto){
     Pawn *p = getPawnAt(rfrom, cfrom);
     if(p == NULL) return MOVE_NO_SOURCE_PAWN;
 
+    TreeNode* allowed_moves = getAllowedKillsFrom(p, rfrom, cfrom);
     if(isMoveRestricted()){
         if(rfrom != restrictedRow || cfrom != restrictedCol)
             return BOARD_MUST_MOVE_ANOTHER_PAWN;
@@ -161,6 +159,21 @@ int movePawnAtTo(int rfrom, int cfrom, int rto, int cto){
             return BOARD_MOVE_NOT_OPTIMAL;
     }
 
+    treeDestroy(allowed_moves, 1);
+    return movePawnAtTo(p, rfrom, cfrom, rto, cto);
+}
+
+/**
+ * Moves a pawn across the board. It prevents from moving a pawn to 
+ * an unplayable field or to an occupied one. Doesn't check if the move is optimal. 
+ * attemptMovePawnAtTo() should be used to process user's requests.
+ * @param p The pawn being moved
+ * @param rfrom The source row
+ * @param cfrom The source column
+ * @param rto The destination row
+ * @param cto The destination column
+ */
+int movePawnAtTo(Pawn* p, int rfrom, int cfrom, int rto, int cto){
     int res = checkMove(rfrom, cfrom, rto, cto);
     if(res != MOVE_LEGAL) return res;
 
@@ -178,13 +191,13 @@ int movePawnAtTo(int rfrom, int cfrom, int rto, int cto){
 
     stackPush(movesHistory, md);
 
-    PawnWithPosition* killed_pawn = killPawnAlongMove(rfrom, cfrom, rto, cto);
-    md->killedPawn = killed_pawn->pawn;
-    md->killedRow = killed_pawn->row;
-    md->killedCol = killed_pawn->col;
+    Position* killed_pawn = killPawnAlongMove(rfrom, cfrom, rto, cto);
+    md->killedPawn = positionGetPawn(killed_pawn);
+    md->killedRow = positionGetRow(killed_pawn);
+    md->killedCol = positionGetColumn(killed_pawn);
 
     // Check if there are more pawns to kill, but only if the previous move was a kill
-    if(killed_pawn->pawn != NULL){
+    if(md->killedPawn != NULL){
         if(isPawnAbleToKill(p, rto, cto)){
             restrictMovedPawn(rto, cto);
             return BOARD_MOVE_NOT_FINISHED;
@@ -211,16 +224,14 @@ int movePawnAtTo(int rfrom, int cfrom, int rto, int cto){
  * @param rto The destination row
  * @param cto The destination column
  */
-PawnWithPosition* killPawnAlongMove(int rfrom, int cfrom, int rto, int cto){
+Position* killPawnAlongMove(int rfrom, int cfrom, int rto, int cto){
     int rdir = 1, cdir = 1;
     if(rfrom > rto) rdir = -1;
     if(cfrom > cto) cdir = -1;
 
     int len = rdir * (rto - rfrom);
     Pawn* p;
-    PawnWithPosition* pwp = malloc(sizeof(PawnWithPosition));
-    pwp->pawn = NULL;
-    pwp->row = pwp->col = -1;
+    Position* pwp = positionCreate(-1, -1, NULL);
 
     for(int i = 1; i < len; i++){
         int curr_r = rfrom + i*rdir;
@@ -230,9 +241,9 @@ PawnWithPosition* killPawnAlongMove(int rfrom, int cfrom, int rto, int cto){
         if(p == NULL) continue;
 
         placePawnAt(NULL, curr_r, curr_c);
-        pwp->pawn = p;
-        pwp->row = curr_r;
-        pwp->col = curr_c;
+
+        positionDestroy(pwp);
+        pwp = positionCreate(curr_r, curr_c, p);
     }
     return pwp;
 }

@@ -17,7 +17,8 @@ char isPlayableField(int row, int col);
 
 Pawn* getPawnAt(int row, int col);
 void placePawnAt(Pawn* pawn, int row, int col);
-int movePawnAtTo(int rfrom, int cfrom, int rto, int cto);
+int attemptMovePawnAtTo(int rfrom, int cfrom, int rto, int cto);
+int movePawnAtTo(Pawn* p, int rfrom, int cfrom, int rto, int cto);
 void undoMove();
 
 void createStartLayout();
