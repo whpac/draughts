@@ -45,6 +45,7 @@ void initBoard(){
     }
 }
 
+/** Returns color of a player that's going to perform the next move. */
 PawnColor getNextMoveColor(){
     return nextMoveColor;
 }
@@ -170,7 +171,37 @@ int attemptMovePawnAtTo(int rfrom, int cfrom, int rto, int cto){
         if(!is_legal)
             return BOARD_MOVE_NOT_OPTIMAL;
     }else{
-        if(!isOptimalMove(p, rfrom, cfrom, rto, cto))
+        char is_legal = 0;
+        List* allowed_kills_list = getAllowedKills(getNextMoveColor());
+        int allowed_kills_length = listGetLength(allowed_kills_list);
+
+        for(int i = 0; i < allowed_kills_length && !is_legal; i++){
+            TreeNode* moves = listGet(allowed_kills_list, i);
+            Position* from = treeGetNodeContent(moves);
+
+            if(rfrom == positionGetRow(from) && cfrom == positionGetColumn(from)){
+                for(int i = 0; i < treeGetChildNodesCount(moves); i++){
+                    TreeNode* child_node = treeGetChildNode(moves, i);
+                    Position* to_pos = treeGetNodeContent(child_node);
+
+                    if(rto == positionGetRow(to_pos) && cto == positionGetColumn(to_pos)){
+                        is_legal = 1;
+                        break;
+                    }
+                }
+            }
+        }
+
+        if(allowed_kills_length == 0) is_legal = 1;
+
+        for(int i = 0; i < allowed_kills_length; i++){
+            TreeNode* n = listGet(allowed_kills_list, 0);
+            treeDestroy(n, 1);
+            listRemove(allowed_kills_list, 0, 0);
+        }
+        listDestroy(allowed_kills_list, 0);
+
+        if(!is_legal)
             return BOARD_MOVE_NOT_OPTIMAL;
     }
     return movePawnAtTo(p, rfrom, cfrom, rto, cto);

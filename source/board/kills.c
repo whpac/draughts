@@ -80,82 +80,45 @@ char isKingAbleToKill(Pawn* p, int row, int col){
     return 0;
 }
 
-// TODO: Replace these ints with a tree of fields
-// ! Seems to be deprecated. Use the version using tree when ready
 /**
- * Checks if the move is an optimal one. Optimal means the most kills.
- * @param p The killing pawn
- * @param rfrom The source row
- * @param cfrom The source column
- * @param rto The destination row
- * @param cto The destination column
- */
-char isOptimalMove(Pawn* p, int rfrom, int cfrom, int rto, int cto){
-    int move_kills = countPossibleKillsByMan(p, rfrom, cfrom, -1, -1);
-
-    for(int r = 0; r < getBoardSize(); r++){
-        for(int c = 0; c < getBoardSize(); c++){
-            if(!isPlayableField(r, c)) continue;
-
-            Pawn* f_pawn = getPawnAt(r, c);
-            if(f_pawn == NULL) continue;
-            if(getPawnColor(p) != getPawnColor(f_pawn)) continue;
-
-            int k = countPossibleKillsByMan(f_pawn, r, c, -1, -1);
-            if(k > move_kills) return 0;
-        }
-    }
-
-    return 1;
-}
-
-/**
- * Counts how many pawns can be killed in a series by a man standing at (rfrom, cfrom)
- * @param p The pawn that is to kill others
- * @param row The source row
- * @param col The source column
- * @param rfrom The previous call's row. In the outermost scope should be -1 or row
- * @param cfrom The previous call's column. In the outermost scope should be -1 or col
- */
-int countPossibleKillsByMan(Pawn* p, int row, int col, int rfrom, int cfrom){
-    if(!isInBoard(row, col)) return 0;
-    if(!isManAbleToKill(p, row, col)) return 0;
-
-    int rdir[4] = {1, 1, -1, -1};
-    int cdir[4] = {1, -1, 1, -1};
-
-    int kills = 0;
-    for(int i = 0; i < 4; i++){
-        int crow = row + 2*rdir[i];
-        int ccol = col + 2*cdir[i];
-
-        // Skip the previous field to avoid infinite loops
-        if(crow == rfrom && ccol == cfrom) continue;
-        if(!isInBoard(crow, ccol)) continue;
-
-        // The target field must be empty
-        Pawn* target = getPawnAt(crow, ccol);
-        if(target != NULL) continue;
-
-        // Cannot kill air or own pawns
-        Pawn* killed = getPawnAt(row + rdir[i], col + cdir[i]);
-        if(killed == NULL) continue;
-        if(getPawnColor(p) == getPawnColor(killed)) continue;
-
-        int res = 1 + countPossibleKillsByMan(p, crow, ccol, row, col);
-        if(res > kills) kills = res;
-    }
-
-    return kills;
-}
-
-
-/**
- * Checks all possible moves and returns a list of these which are allowed
+ * Checks all possible kills and returns a list of these which are allowed. 
+ * The returned structure is a list of TreeNode's.
  * @param color The player's color whose move it is
  */
-void getAllowedMoves(PawnColor color){
+List* getAllowedKills(PawnColor color){
+    List* allowed_kills = listCreate();
+    int max_kill_length = 1;
 
+    for(int row = 0; row < getBoardSize(); row++){
+        for(int col = 0; col < getBoardSize(); col++){
+            // Check if the source pawn is valid
+            Pawn* p = getPawnAt(row, col);
+            if(p == NULL) continue;
+            if(getPawnColor(p) != color) continue;
+
+            // Get legal kills from the source positions
+            TreeNode* kills_from_pos = getAllowedKillsFrom(p, row, col);
+            int kill_length = treeGetDepth(kills_from_pos);
+
+            if(kill_length > max_kill_length){
+                // If the newly-obtained kill is the longest, remove all former ones
+                for(int i = 0; i < listGetLength(allowed_kills); i++){
+                    TreeNode* n = listGet(allowed_kills, 0);
+                    treeDestroy(n, 1);
+                    listRemove(allowed_kills, 0, 0);
+                }
+                listAdd(allowed_kills, kills_from_pos);
+                max_kill_length = kill_length;
+            }else if(kill_length == max_kill_length){
+                // If the length is equal to previous ones, just append it
+                listAdd(allowed_kills, kills_from_pos);
+            }else{
+                // If it's too short, discard it
+                treeDestroy(kills_from_pos, 1);
+            }
+        }
+    }
+    return allowed_kills;
 }
 
 /**
