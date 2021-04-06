@@ -151,59 +151,59 @@ int attemptMovePawnAtTo(int rfrom, int cfrom, int rto, int cto){
     Pawn *p = getPawnAt(rfrom, cfrom);
     if(p == NULL) return MOVE_NO_SOURCE_PAWN;
 
+    List* allowed_kills_list;
+    char is_legal = 0;
+    int allowed_kills_list_length = 0;
+
+    // If the source field is restricted to only one pawn,
+    // check only kills originating from that field
     if(isMoveRestricted()){
         if(rfrom != restrictedRow || cfrom != restrictedCol)
             return BOARD_MUST_MOVE_ANOTHER_PAWN;
 
-        char is_legal = 0;
-        TreeNode* allowed_moves = getAllowedKillsFrom(p, rfrom, cfrom);
-        for(int i = 0; i < treeGetChildNodesCount(allowed_moves); i++){
-            TreeNode* child_node = treeGetChildNode(allowed_moves, i);
-            Position* to_pos = treeGetNodeContent(child_node);
-
-            if(rto == positionGetRow(to_pos) && cto == positionGetColumn(to_pos)){
-                is_legal = 1;
-                break;
-            }
-        }
-        treeDestroy(allowed_moves, 1);
-
-        if(!is_legal)
-            return BOARD_MOVE_NOT_OPTIMAL;
+        allowed_kills_list = listCreate();
+        listAdd(
+            allowed_kills_list,
+            getAllowedKillsFrom(p, rfrom, cfrom)
+        );
     }else{
-        char is_legal = 0;
-        List* allowed_kills_list = getAllowedKills(getNextMoveColor());
-        int allowed_kills_length = listGetLength(allowed_kills_list);
+        allowed_kills_list = getAllowedKills(getNextMoveColor());
+    }
+    // Empty kills list means that player has to perfom a non-killing move
+    // Thus, every move that is permitted by the rules is legal
+    allowed_kills_list_length = listGetLength(allowed_kills_list);
+    if(allowed_kills_list_length == 0) is_legal = 1;
 
-        for(int i = 0; i < allowed_kills_length && !is_legal; i++){
-            TreeNode* moves = listGet(allowed_kills_list, i);
-            Position* from = treeGetNodeContent(moves);
+    // Traverse through the entire list to find the matching source field
+    for(int i = 0; i < allowed_kills_list_length && !is_legal; i++){
+        TreeNode* moves = listGet(allowed_kills_list, i);
+        Position* from = treeGetNodeContent(moves);
 
-            if(rfrom == positionGetRow(from) && cfrom == positionGetColumn(from)){
-                for(int i = 0; i < treeGetChildNodesCount(moves); i++){
-                    TreeNode* child_node = treeGetChildNode(moves, i);
-                    Position* to_pos = treeGetNodeContent(child_node);
+        if(rfrom == positionGetRow(from) && cfrom == positionGetColumn(from)){
+            // Loop through the destinations to find the one requested by player
+            for(int i = 0; i < treeGetChildNodesCount(moves); i++){
+                TreeNode* child_node = treeGetChildNode(moves, i);
+                Position* to_pos = treeGetNodeContent(child_node);
 
-                    if(rto == positionGetRow(to_pos) && cto == positionGetColumn(to_pos)){
-                        is_legal = 1;
-                        break;
-                    }
+                if(rto == positionGetRow(to_pos) && cto == positionGetColumn(to_pos)){
+                    is_legal = 1;
+                    break;
                 }
             }
         }
-
-        if(allowed_kills_length == 0) is_legal = 1;
-
-        for(int i = 0; i < allowed_kills_length; i++){
-            TreeNode* n = listGet(allowed_kills_list, 0);
-            treeDestroy(n, 1);
-            listRemove(allowed_kills_list, 0, 0);
-        }
-        listDestroy(allowed_kills_list, 0);
-
-        if(!is_legal)
-            return BOARD_MOVE_NOT_OPTIMAL;
     }
+
+    // Destroy every tree in a list and then destroy the list itself
+    for(int i = 0; i < allowed_kills_list_length; i++){
+        TreeNode* n = listGet(allowed_kills_list, 0);
+        treeDestroy(n, 1);
+        listRemove(allowed_kills_list, 0, 0);
+    }
+    listDestroy(allowed_kills_list, 0);
+
+    if(!is_legal)
+        return BOARD_MOVE_NOT_OPTIMAL;
+
     return movePawnAtTo(p, rfrom, cfrom, rto, cto);
 }
 
@@ -320,12 +320,11 @@ void createStartLayout(){
     }
 
     // Place black pawns
-    for (int row = BOARD_SIZE / 2 + 1; row < BOARD_SIZE; row++)
+    for(int row = BOARD_SIZE / 2 + 1; row < BOARD_SIZE; row++)
     {
-        for (int col = 0; col < BOARD_SIZE; col++)
+        for(int col = 0; col < BOARD_SIZE; col++)
         {
-            if (!isPlayableField(row, col))
-                continue;
+            if(!isPlayableField(row, col)) continue;
             p = createPawn(black, 0);
             placePawnAt(p, row, col);
         }
