@@ -150,16 +150,29 @@ int attemptMovePawnAtTo(int rfrom, int cfrom, int rto, int cto){
     Pawn *p = getPawnAt(rfrom, cfrom);
     if(p == NULL) return MOVE_NO_SOURCE_PAWN;
 
-    TreeNode* allowed_moves = getAllowedKillsFrom(p, rfrom, cfrom);
     if(isMoveRestricted()){
         if(rfrom != restrictedRow || cfrom != restrictedCol)
             return BOARD_MUST_MOVE_ANOTHER_PAWN;
+
+        char is_legal = 0;
+        TreeNode* allowed_moves = getAllowedKillsFrom(p, rfrom, cfrom);
+        for(int i = 0; i < treeGetChildNodesCount(allowed_moves); i++){
+            TreeNode* child_node = treeGetChildNode(allowed_moves, i);
+            Position* to_pos = treeGetNodeContent(child_node);
+
+            if(rto == positionGetRow(to_pos) && cto == positionGetColumn(to_pos)){
+                is_legal = 1;
+                break;
+            }
+        }
+        treeDestroy(allowed_moves, 1);
+
+        if(!is_legal)
+            return BOARD_MOVE_NOT_OPTIMAL;
     }else{
         if(!isOptimalMove(p, rfrom, cfrom, rto, cto))
             return BOARD_MOVE_NOT_OPTIMAL;
     }
-
-    treeDestroy(allowed_moves, 1);
     return movePawnAtTo(p, rfrom, cfrom, rto, cto);
 }
 

@@ -2,6 +2,7 @@
 #include "kills.h"
 #include "board.h"
 #include "moves.h"
+#include "position.h"
 
 char isManAbleToKill(Pawn* p, int row, int col);
 char isKingAbleToKill(Pawn* p, int row, int col);
@@ -80,6 +81,7 @@ char isKingAbleToKill(Pawn* p, int row, int col){
 }
 
 // TODO: Replace these ints with a tree of fields
+// ! Seems to be deprecated. Use the version using tree when ready
 /**
  * Checks if the move is an optimal one. Optimal means the most kills.
  * @param p The killing pawn
@@ -145,4 +147,65 @@ int countPossibleKillsByMan(Pawn* p, int row, int col, int rfrom, int cfrom){
     }
 
     return kills;
+}
+
+
+/**
+ * Checks all possible moves and returns a list of these which are allowed
+ * @param color The player's color whose move it is
+ */
+void getAllowedMoves(PawnColor color){
+
+}
+
+/**
+ * Returns all allowed paths from the given field
+ * @param p The pawn being moved
+ * @param row The source row
+ * @param col The source column
+ */
+TreeNode* getAllowedKillsFrom(Pawn* p, int row, int col){
+    int rdir[] = {1, 1, -1, -1};
+    int cdir[] = {1, -1, 1, -1};
+
+    TreeNode* moves_tree = treeCreate(positionCreate(row, col, p));
+    int max_depth = 0;
+
+    for(int i = 0; i < 4; i++){
+        int longest_move = isPawnKing(p) ? (getBoardSize() - 1) : 2;
+        for(int j = 2; j <= longest_move; j++){
+            int rto = row + j*rdir[i];
+            int cto = col + j*cdir[i];
+            if(checkMove(row, col, rto, cto) == MOVE_LEGAL){
+                // An allowed kill must actually be a kill
+                Position* killed_pos = getPawnAlongMove(row, col, rto, cto);
+                Pawn* killed_pawn = positionGetPawn(killed_pos);
+                positionDestroy(killed_pos);
+                if(killed_pawn == NULL) continue;
+
+                // Move the pawn and perform a recursive check
+                int res = movePawnAtTo(p, row, col, rto, cto);
+                if(res != BOARD_MOVE_SUCCESSFUL && res != BOARD_MOVE_NOT_FINISHED) continue;
+
+                TreeNode* moves_subtree = getAllowedKillsFrom(p, rto, cto);
+                undoMove();                 // There is no need to undo a failed move
+
+                // Add a tree only if it is of at least the same depth as others
+                // If the new subtree's depth is greater, remove former subtrees
+                int subtree_depth = treeGetDepth(moves_subtree);
+                if(subtree_depth > max_depth){
+                    max_depth = subtree_depth;
+                    treeDestroy(moves_tree, 1);
+                    moves_tree = treeCreate(positionCreate(row, col, p));
+                    treeAddChildNode(moves_tree, moves_subtree);
+                }else if(subtree_depth == max_depth){
+                    treeAddChildNode(moves_tree, moves_subtree);
+                }else{
+                    treeDestroy(moves_subtree, 1);
+                }
+            }
+        }
+    }
+
+    return moves_tree;
 }
