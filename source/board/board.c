@@ -29,6 +29,7 @@ PawnColor nextMoveColor;
 int restrictedRow, restrictedCol;
 Stack* movesHistory;
 
+void destroyPawnAt(int row, int col);
 void restrictMovedPawn(int rfrom, int cfrom);
 char isMoveRestricted();
 Position* killPawnAlongMove(int rfrom, int cfrom, int rto, int cto);
@@ -122,13 +123,12 @@ void placePawnAt(Pawn* pawn, int row, int col){
 }
 
 /**
- * Destroys a pawn that is places at the given position
+ * Destroys a pawn that is placed at the given position. 
+ * Use only at the end of the game.
  * @param row The row where the pawn is placed
  * @param col The column where the pawn is placed
  * @deprecated
  */
-/*
-! Deprecated. Since killed pawns are stored in move history, they cannot be removed from the memory
 void destroyPawnAt(int row, int col){
     Pawn* p = getPawnAt(row, col);
     if(p == NULL) return;
@@ -136,7 +136,6 @@ void destroyPawnAt(int row, int col){
     placePawnAt(NULL, row, col);
     destroyPawn(p);
 }
-*/
 
 /**
  * Attempts to move a pawn across the board. It prevents from moving a pawn to 
@@ -347,4 +346,21 @@ int countPawnsOfColor(PawnColor color){
     }
 
     return count;
+}
+
+/**
+ * Destroys the board and frees the memory. It is done by undoing 
+ * all the moves and clearing the board then.
+ */
+void destroyBoard(){
+    while(!stackIsEmpty(movesHistory)){
+        undoMove();
+    }
+    stackDestroy(movesHistory);
+
+    for(int row = 0; row < getBoardSize(); row++){
+        for(int col = 0; col < getBoardSize(); col++){
+            destroyPawnAt(row, col);
+        }
+    }
 }

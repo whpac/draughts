@@ -24,4 +24,6 @@ void undoMove();
 void createStartLayout();
 int countPawnsOfColor(PawnColor color);
 
+void destroyBoard();
+
 #endif

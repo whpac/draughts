@@ -13,5 +13,6 @@ int main()
     createStartLayout();
     beginInputLoop(&displayBoard);
 
+    destroyBoard();
     return 0;
 }
