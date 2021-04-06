@@ -1,3 +1,4 @@
+#include<stddef.h>
 #include<malloc.h>
 #include "position.h"
 
