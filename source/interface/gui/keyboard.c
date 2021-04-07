@@ -3,6 +3,9 @@
 #include "keyboard.h"
 
 void guiBeginInputLoop(){
+    guiReloadBoard();
+    guiPaintBoard();
+
     ALLEGRO_EVENT event;
     al_start_timer(guiGetTimer());
     while(1)
@@ -40,6 +43,6 @@ void guiBeginInputLoop(){
             break;
 
         if(redraw)
-            guiDisplayBoard();
+            guiPaintBoard();
     }
 }

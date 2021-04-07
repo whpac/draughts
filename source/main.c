@@ -14,7 +14,6 @@ int main()
     createStartLayout();
 
     if(guiInit()){
-        guiDisplayBoard();
         guiBeginInputLoop();
         guiDestroy();
     }else{

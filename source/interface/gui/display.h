@@ -5,7 +5,9 @@
 
 char guiInit();
 void guiDestroy();
-void guiDisplayBoard();
+
+void guiReloadBoard();
+void guiPaintBoard();
 
 ALLEGRO_TIMER* guiGetTimer();
 ALLEGRO_EVENT_QUEUE* guiGetEventQueue();

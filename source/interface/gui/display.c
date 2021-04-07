@@ -16,8 +16,6 @@ Pawn** boardBuffer;
 
 int cursorRow, cursorCol;
 
-void guiCopyBoardToBuffer();
-
 /** Initializes the GUI. Returns 0 on failure. */
 char guiInit(){
     boardBuffer = malloc(sizeof(Pawn*) * getBoardSize() * getBoardSize());
@@ -76,7 +74,7 @@ ALLEGRO_EVENT_QUEUE* guiGetEventQueue(){
 }
 
 /** Copies the board to the internal buffer. This prevents blinking when game is predicting moves */
-void guiCopyBoardToBuffer(){
+void guiReloadBoard(){
     int size = getBoardSize();
     for(int row = 0; row < size; row++){
         for(int col = 0; col < size; col++){
@@ -86,8 +84,7 @@ void guiCopyBoardToBuffer(){
 }
 
 /** Forces the program to read the current board state and repaint it */
-void guiDisplayBoard(){
-    guiCopyBoardToBuffer();
+void guiPaintBoard(){
     paintBoard(boardBuffer, getBoardSize(), cursorRow, cursorCol);
     al_flip_display();
 }
