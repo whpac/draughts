@@ -14,12 +14,13 @@
 #define WHITE_PAWN_BORDER al_map_rgb(192, 192, 192)
 #define BLACK_PAWN_FILL al_map_rgb(0, 0, 0)
 #define BLACK_PAWN_BORDER al_map_rgb(64, 64, 64)
-#define CURSOR_OK_COLOR al_map_rgb(0, 255, 0)
-#define CURSOR_ERR_COLOR al_map_rgb(255, 0, 0)
+#define CURSOR_GREEN_COLOR al_map_rgb(0, 255, 0)
+#define CURSOR_RED_COLOR al_map_rgb(255, 0, 0)
+#define CURSOR_GOLD_COLOR al_map_rgb(255, 204, 0)
 
 void paintField(int row, int col);
 void paintPawn(Pawn* p, int row, int col);
-void paintCursor(Pawn* p, int row, int col);
+void paintCursor(Pawn* p, int row, int col, MarkerColor marker_color);
 
 float getFieldWidth(){
     return FIELD_WIDTH;
@@ -48,7 +49,7 @@ void paintBoard(Pawn** buffer, int board_size){
 
         int crow = marker->row;
         int ccol = marker->col;
-        paintCursor(buffer[crow * board_size + ccol], crow, ccol);
+        paintCursor(buffer[crow * board_size + ccol], crow, ccol, marker->color);
 
         markerDestroy(marker);
         listRemove(markers, 0, 0);
@@ -116,13 +117,22 @@ void paintPawn(Pawn* p, int row, int col){
  * @param p The pawn pointed at by the cursor
  * @param row The row to point
  * @param col The column to point
+ * @param marker_color The color of the marker
  */
-void paintCursor(Pawn* p, int row, int col){
-    ALLEGRO_COLOR color = CURSOR_OK_COLOR;
+void paintCursor(Pawn* p, int row, int col, MarkerColor marker_color){
+    ALLEGRO_COLOR color = CURSOR_GREEN_COLOR;
 
-    if(!isPlayableField(row, col)) color = CURSOR_ERR_COLOR;
-    if(p == NULL) color = CURSOR_ERR_COLOR;
-    else if(getPawnColor(p) != getNextMoveColor()) color = CURSOR_ERR_COLOR;
+    switch(marker_color){
+        case red:
+            color = CURSOR_RED_COLOR;
+            break;
+        case green:
+            color = CURSOR_GREEN_COLOR;
+            break;
+        case gold:
+            color = CURSOR_GOLD_COLOR;
+            break;
+    }
 
     al_draw_rectangle(
         FIELD_WIDTH * col + 2.0, FIELD_WIDTH * row + 2.0,

@@ -4,6 +4,7 @@
 #include<allegro5/allegro_primitives.h>
 #include "display.h"
 #include "painter.h"
+#include "controller.h"
 #include "../../board/board.h"
 #include "../../board/pawn.h"
 
@@ -12,14 +13,9 @@ ALLEGRO_EVENT_QUEUE* queue;
 ALLEGRO_DISPLAY* disp;
 ALLEGRO_FONT* font;
 
-Pawn** boardBuffer;
-
 /** Initializes the GUI. Returns 0 on failure. */
 char guiInit(){
-    boardBuffer = malloc(sizeof(Pawn*) * getBoardSize() * getBoardSize());
-    if(boardBuffer == NULL){
-        return 0;
-    }
+    guiInitController();
 
     if(!al_init()) return 0;
     if(!al_install_keyboard()) return 0;
@@ -55,8 +51,6 @@ void guiDestroy(){
     al_destroy_display(disp);
     al_destroy_timer(timer);
     al_destroy_event_queue(queue);
-
-    free(boardBuffer);
 }
 
 /** Returns the GUI timer */
@@ -67,20 +61,4 @@ ALLEGRO_TIMER* guiGetTimer(){
 /** Returns the GUI event queue */
 ALLEGRO_EVENT_QUEUE* guiGetEventQueue(){
     return queue;
-}
-
-/** Copies the board to the internal buffer. This prevents blinking when game is predicting moves */
-void guiReloadBoard(){
-    int size = getBoardSize();
-    for(int row = 0; row < size; row++){
-        for(int col = 0; col < size; col++){
-            boardBuffer[row * size + col] = getPawnAt(row, col);
-        }
-    }
-}
-
-/** Forces the program to read the current board state and repaint it */
-void guiPaintBoard(){
-    paintBoard(boardBuffer, getBoardSize());
-    al_flip_display();
 }
