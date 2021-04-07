@@ -12,6 +12,4 @@ void guiPaintBoard();
 ALLEGRO_TIMER* guiGetTimer();
 ALLEGRO_EVENT_QUEUE* guiGetEventQueue();
 
-void guiMoveCursor(int drow, int dcol);
-
 #endif

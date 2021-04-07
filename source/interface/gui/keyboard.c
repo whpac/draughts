@@ -1,5 +1,6 @@
 #include<allegro5/allegro5.h>
 #include "display.h"
+#include "controller.h"
 #include "keyboard.h"
 
 void guiBeginInputLoop(){

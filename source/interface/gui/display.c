@@ -14,16 +14,12 @@ ALLEGRO_FONT* font;
 
 Pawn** boardBuffer;
 
-int cursorRow, cursorCol;
-
 /** Initializes the GUI. Returns 0 on failure. */
 char guiInit(){
     boardBuffer = malloc(sizeof(Pawn*) * getBoardSize() * getBoardSize());
     if(boardBuffer == NULL){
         return 0;
     }
-
-    cursorRow = cursorCol = 0;
 
     if(!al_init()) return 0;
     if(!al_install_keyboard()) return 0;
@@ -85,22 +81,6 @@ void guiReloadBoard(){
 
 /** Forces the program to read the current board state and repaint it */
 void guiPaintBoard(){
-    paintBoard(boardBuffer, getBoardSize(), cursorRow, cursorCol);
+    paintBoard(boardBuffer, getBoardSize());
     al_flip_display();
-}
-
-/**
- * Moves the cursor by a given number of fields in the specified directions
- * @param drow The difference in row number
- * @param dcol The difference in column number
- */
-void guiMoveCursor(int drow, int dcol){
-    cursorRow += drow;
-    cursorCol += dcol;
-    int size = getBoardSize();
-
-    if(cursorRow < 0) cursorRow = 0;
-    if(cursorCol < 0) cursorCol = 0;
-    if(cursorRow >= size) cursorRow = size - 1;
-    if(cursorCol >= size) cursorCol = size - 1;
 }

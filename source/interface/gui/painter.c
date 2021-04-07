@@ -2,11 +2,14 @@
 #include <allegro5/allegro_primitives.h>
 #include "../../board/board.h"
 #include "../../board/pawn.h"
+#include "../../data/list.h"
 #include "painter.h"
+#include "controller.h"
+#include "marker.h"
 
 #define FIELD_WIDTH 60.0
-#define WHITE_FIELD al_map_rgb(48, 48, 48)
-#define BLACK_FIELD al_map_rgb(172, 172, 172)
+#define WHITE_FIELD al_map_rgb(172, 172, 172)
+#define BLACK_FIELD al_map_rgb(0, 102, 102)
 #define WHITE_PAWN_FILL al_map_rgb(255, 255, 255)
 #define WHITE_PAWN_BORDER al_map_rgb(192, 192, 192)
 #define BLACK_PAWN_FILL al_map_rgb(0, 0, 0)
@@ -26,10 +29,8 @@ float getFieldWidth(){
  * Paints the game board
  * @param buffer An array of pointers to pawns
  * @param board_size The length of board side
- * @param crow The cursor's row
- * @param ccol The cursor's column
  */
-void paintBoard(Pawn** buffer, int board_size, int crow, int ccol){
+void paintBoard(Pawn** buffer, int board_size){
     al_clear_to_color(al_map_rgb(0, 0, 0));
 
     for(int row = 0; row < board_size; row++){
@@ -41,7 +42,18 @@ void paintBoard(Pawn** buffer, int board_size, int crow, int ccol){
         }
     }
 
-    paintCursor(buffer[crow * board_size + ccol], crow, ccol);
+    List* markers = guiGetMarkers();
+    while(listGetLength(markers) > 0){
+        Marker* marker = listGet(markers, 0);
+
+        int crow = marker->row;
+        int ccol = marker->col;
+        paintCursor(buffer[crow * board_size + ccol], crow, ccol);
+
+        markerDestroy(marker);
+        listRemove(markers, 0, 0);
+    }
+    listDestroy(markers, 0);
 }
 
 /**
@@ -51,7 +63,7 @@ void paintBoard(Pawn** buffer, int board_size, int crow, int ccol){
  */
 void paintField(int row, int col){
     ALLEGRO_COLOR color;
-    if((row + col) % 2 == 1){
+    if((row + col) % 2 == 0){
         color = WHITE_FIELD;
     }else{
         color = BLACK_FIELD;
