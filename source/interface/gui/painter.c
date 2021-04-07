@@ -4,6 +4,10 @@
 #define FIELD_WIDTH 60.0
 #define WHITE_FIELD al_map_rgb(48, 48, 48)
 #define BLACK_FIELD al_map_rgb(172, 172, 172)
+#define WHITE_PAWN_FILL al_map_rgb(255, 255, 255)
+#define WHITE_PAWN_BORDER al_map_rgb(192, 192, 192)
+#define BLACK_PAWN_FILL al_map_rgb(0, 0, 0)
+#define BLACK_PAWN_BORDER al_map_rgb(64, 64, 64)
 
 void paintField(int row, int col);
 void paintPawn(Pawn* p, int row, int col);
@@ -59,11 +63,11 @@ void paintPawn(Pawn* p, int row, int col){
 
     ALLEGRO_COLOR fill_color, border_color;
     if(getPawnColor(p) == white){
-        fill_color = al_map_rgb(255, 255, 255);
-        border_color = al_map_rgb(192, 192, 192);
+        fill_color = WHITE_PAWN_FILL;
+        border_color = WHITE_PAWN_BORDER;
     }else{
-        fill_color = al_map_rgb(0, 0, 0);
-        border_color = al_map_rgb(64, 64, 64);
+        fill_color = BLACK_PAWN_FILL;
+        border_color = BLACK_PAWN_BORDER;
     }
 
     al_draw_filled_circle(
@@ -74,4 +78,11 @@ void paintPawn(Pawn* p, int row, int col){
         FIELD_WIDTH * (col + 0.5), FIELD_WIDTH * (row + 0.5),
         FIELD_WIDTH * 0.35, border_color, 2.0
     );
+
+    if(isPawnKing(p)){
+        al_draw_filled_circle(
+            FIELD_WIDTH * (col + 0.5), FIELD_WIDTH * (row + 0.5),
+            FIELD_WIDTH * 0.2, border_color
+        );
+    }
 }
