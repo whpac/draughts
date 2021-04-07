@@ -1,24 +1,19 @@
 #include<stdio.h>
-#include "text.h"
+#include "input.h"
 #include "cmd_processor.h"
-#include "../board/board.h"
-#include "../board/moves.h"
+#include "display.h"
+#include "../../board/board.h"
+#include "../../board/moves.h"
 
 char doInputIteration();
 void handleVictory(int white_count, int black_count);
 void handleError();
 int getIntArg();
 
-/** Pointer to a function responsible for displaying the game board */
-void (*boardDisplay)();
-
 /**
  * Begins the input loop.
- * @param board_display_func The procedure used to display the board
  */
-void beginInputLoop(void (*board_display_func)()){
-    boardDisplay = board_display_func;
-
+void beginInputLoop(){
     while(doInputIteration());
 }
 
@@ -28,7 +23,7 @@ void beginInputLoop(void (*board_display_func)()){
  */
 char doInputIteration(){
     printf("Current board:\n");
-    (*boardDisplay)();
+    displayBoard();
 
     int white_cnt = countPawnsOfColor(white);
     int black_cnt = countPawnsOfColor(black);

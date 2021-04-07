@@ -3,15 +3,14 @@
 
 #include "board/pawn.h"
 #include "board/board.h"
-#include "display/console.h"
-#include "input/text.h"
+#include "interface/text/input.h"
 
 int main()
 {
     initBoard();
 
     createStartLayout();
-    beginInputLoop(&displayBoard);
+    beginInputLoop();
 
     destroyBoard();
     return 0;

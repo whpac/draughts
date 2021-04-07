@@ -1,6 +1,6 @@
 #include<stdio.h>
 #include "cmd_processor.h"
-#include "../board/board.h"
+#include "../../board/board.h"
 
 void printHelp();
 int movePawn(int rfrom, int cfrom, int rto, int cto);

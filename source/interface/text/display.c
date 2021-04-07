@@ -1,6 +1,6 @@
 #include<stdio.h>
-#include "console.h"
-#include "../board/board.h"
+#include "display.h"
+#include "../../board/board.h"
 
 void displayBoard(){
     int size = getBoardSize();
