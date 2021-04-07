@@ -8,7 +8,7 @@ run: all
 	./${OUTPUT}
 
 ${OUTPUT}: ${OBJ}
-	gcc -o $@ $^ -lallegro -lallegro_font
+	gcc -o $@ $^ -lallegro -lallegro_font -lallegro_primitives
 
 obj/%.o: source/%.c ${HEADERS}
 	gcc -c $< -o $@
