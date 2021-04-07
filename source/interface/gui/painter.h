@@ -3,7 +3,7 @@
 
 #include "../../board/pawn.h"
 
-void paintBoard(Pawn** buffer, int board_size);
+void paintBoard(Pawn** buffer, int board_size, int crow, int ccol);
 float getFieldWidth();
 
 #endif

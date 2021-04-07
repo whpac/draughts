@@ -1,6 +1,5 @@
 #include<stddef.h>
 #include<malloc.h>
-#include<allegro5/allegro5.h>
 #include<allegro5/allegro_font.h>
 #include<allegro5/allegro_primitives.h>
 #include "display.h"
@@ -15,6 +14,8 @@ ALLEGRO_FONT* font;
 
 Pawn** boardBuffer;
 
+int cursorRow, cursorCol;
+
 void guiCopyBoardToBuffer();
 
 /** Initializes the GUI. Returns 0 on failure. */
@@ -23,6 +24,8 @@ char guiInit(){
     if(boardBuffer == NULL){
         return 0;
     }
+
+    cursorRow = cursorCol = 0;
 
     if(!al_init()) return 0;
     if(!al_install_keyboard()) return 0;
@@ -62,6 +65,16 @@ void guiDestroy(){
     free(boardBuffer);
 }
 
+/** Returns the GUI timer */
+ALLEGRO_TIMER* guiGetTimer(){
+    return timer;
+}
+
+/** Returns the GUI event queue */
+ALLEGRO_EVENT_QUEUE* guiGetEventQueue(){
+    return queue;
+}
+
 /** Copies the board to the internal buffer. This prevents blinking when game is predicting moves */
 void guiCopyBoardToBuffer(){
     int size = getBoardSize();
@@ -75,27 +88,22 @@ void guiCopyBoardToBuffer(){
 /** Forces the program to read the current board state and repaint it */
 void guiDisplayBoard(){
     guiCopyBoardToBuffer();
-    al_clear_to_color(al_map_rgb(0, 0, 0));
-    al_draw_text(font, al_map_rgb(255, 255, 255), 0, 0, 0, "DRAUGHTS");
-    paintBoard(boardBuffer, getBoardSize());
+    paintBoard(boardBuffer, getBoardSize(), cursorRow, cursorCol);
     al_flip_display();
+}
 
-    ALLEGRO_EVENT event;
-    al_start_timer(timer);
-    while(1)
-    {
-        al_wait_for_event(queue, &event);
+/**
+ * Moves the cursor by a given number of fields in the specified directions
+ * @param drow The difference in row number
+ * @param dcol The difference in column number
+ */
+void guiMoveCursor(int drow, int dcol){
+    cursorRow += drow;
+    cursorCol += dcol;
+    int size = getBoardSize();
 
-        char done = 0;
-        switch(event.type)
-        {
-            case ALLEGRO_EVENT_KEY_DOWN:
-            case ALLEGRO_EVENT_DISPLAY_CLOSE:
-                done = 1;
-                break;
-        }
-
-        if(done)
-            break;
-    }
+    if(cursorRow < 0) cursorRow = 0;
+    if(cursorCol < 0) cursorCol = 0;
+    if(cursorRow >= size) cursorRow = size - 1;
+    if(cursorCol >= size) cursorCol = size - 1;
 }

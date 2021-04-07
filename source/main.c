@@ -4,13 +4,23 @@
 #include "board/pawn.h"
 #include "board/board.h"
 #include "interface/text/input.h"
+#include "interface/gui/display.h"
+#include "interface/gui/keyboard.h"
 
 int main()
 {
     initBoard();
 
     createStartLayout();
-    beginInputLoop();
+
+    if(guiInit()){
+        guiDisplayBoard();
+        guiBeginInputLoop();
+        guiDestroy();
+    }else{
+        // A fallback for GUI init errors
+        beginInputLoop();
+    }
 
     destroyBoard();
     return 0;
