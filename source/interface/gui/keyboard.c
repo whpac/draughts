@@ -31,6 +31,14 @@ void guiBeginInputLoop(){
                 if(event.keyboard.keycode == ALLEGRO_KEY_RIGHT)
                     guiMoveCursor(0, 1);
 
+                if(event.keyboard.keycode == ALLEGRO_KEY_ENTER){
+                    if(guiIsFieldSelected() && !guiIsCurrentFieldSelected()){
+                        guiAttemptMoveFromSelectedToCursor();
+                    }else{
+                        guiSelectCurrentField(0);
+                    }
+                }
+
                 if(event.keyboard.keycode == ALLEGRO_KEY_ESCAPE)
                     done = true;
                 break;

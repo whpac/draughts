@@ -10,6 +10,12 @@ void guiPaintBoard();
 void guiReloadBoard();
 void guiMoveCursor(int drow, int dcol);
 
+void guiSelectCurrentField(char freeze);
+char guiIsFieldSelected();
+char guiIsCurrentFieldSelected();
+
+int guiAttemptMoveFromSelectedToCursor();
+
 List* guiGetMarkers();
 
 #endif
