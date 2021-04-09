@@ -1,6 +1,5 @@
 #include<stddef.h>
 #include<malloc.h>
-#include<allegro5/allegro_font.h>
 #include<allegro5/allegro_primitives.h>
 #include "display.h"
 #include "painter.h"
@@ -27,7 +26,7 @@ char guiInit(){
     al_set_new_window_title("Draughts");
     al_set_new_display_option(ALLEGRO_SAMPLE_BUFFERS, 1, ALLEGRO_SUGGEST);
     al_set_new_display_option(ALLEGRO_SAMPLES, 8, ALLEGRO_SUGGEST);
-    disp = al_create_display(getBoardSize() * getFieldWidth(), getBoardSize() * getFieldWidth());
+    disp = al_create_display(getBoardSize() * getFieldWidth(), getBoardSize() * getFieldWidth() + 40);
     font = al_create_builtin_font();
 
     if(!timer || !queue || !disp || !font){
@@ -61,4 +60,9 @@ ALLEGRO_TIMER* guiGetTimer(){
 /** Returns the GUI event queue */
 ALLEGRO_EVENT_QUEUE* guiGetEventQueue(){
     return queue;
+}
+
+/** Returns the font */
+ALLEGRO_FONT* guiGetFont(){
+    return font;
 }

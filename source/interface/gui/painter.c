@@ -1,4 +1,5 @@
 #include<stddef.h>
+#include<stdio.h>
 #include <allegro5/allegro_primitives.h>
 #include "../../board/board.h"
 #include "../../board/pawn.h"
@@ -6,6 +7,7 @@
 #include "painter.h"
 #include "controller.h"
 #include "marker.h"
+#include "display.h"
 
 #define FIELD_WIDTH 60.0
 #define WHITE_FIELD al_map_rgb(172, 172, 172)
@@ -21,6 +23,7 @@
 void paintField(int row, int col);
 void paintPawn(Pawn* p, int row, int col);
 void paintCursor(Pawn* p, int row, int col, MarkerColor marker_color);
+void paintStatus();
 
 float getFieldWidth(){
     return FIELD_WIDTH;
@@ -55,6 +58,8 @@ void paintBoard(Pawn** buffer, int board_size){
         listRemove(markers, 0, 0);
     }
     listDestroy(markers, 0);
+
+    paintStatus();
 }
 
 /**
@@ -139,4 +144,43 @@ void paintCursor(Pawn* p, int row, int col, MarkerColor marker_color){
         FIELD_WIDTH * (col + 1) - 2.0, FIELD_WIDTH * (row + 1) - 2.0,
         color, 4.0
     );
+}
+
+/**
+ * Prints the number of pawns still in game, the currently moving player and some other info.
+ */
+void paintStatus(){
+    ALLEGRO_FONT* font = guiGetFont();
+    float status_bar_y = getBoardSize() * FIELD_WIDTH + 4;
+    float window_width = getBoardSize() * FIELD_WIDTH;
+    float char_width = 8;
+    char str_buffer[3];
+    int white_pawns, black_pawns;
+
+    white_pawns = countPawnsOfColor(white);
+    black_pawns = countPawnsOfColor(black);
+
+    // Print white's stats
+    al_draw_text(font, al_map_rgb(192, 192, 192), char_width, status_bar_y, ALLEGRO_ALIGN_LEFT, "WHITE");
+    sprintf(str_buffer, "%02d", white_pawns % 100);
+    al_draw_text(font, al_map_rgb(192, 192, 192), 8 * char_width, status_bar_y, ALLEGRO_ALIGN_LEFT, str_buffer);
+
+    // Print black's stats
+    al_draw_text(font, al_map_rgb(192, 192, 192), window_width - char_width, status_bar_y, ALLEGRO_ALIGN_RIGHT, "BLACK");
+    sprintf(str_buffer, "%02d", black_pawns % 100);
+    al_draw_text(font, al_map_rgb(192, 192, 192), window_width - 8 * char_width, status_bar_y, ALLEGRO_ALIGN_RIGHT, str_buffer);
+
+    char* move_indicator = "< MOVE  ";
+    if(getNextMoveColor() == black) move_indicator = "  MOVE >";
+    if(white_pawns == 0) move_indicator = "GAME OVER! BLACK has won!";
+    if(black_pawns == 0) move_indicator = "GAME OVER! WHITE has won!";
+
+    al_draw_text(font, al_map_rgb(192, 192, 192), window_width / 2, status_bar_y, ALLEGRO_ALIGN_CENTER, move_indicator);
+
+    char* arrows = "Use ARROW keys to move";
+    char* esc = "Press ESC to exit";
+    char* enter = "ENTER selects a pawn to move and confirms the target field";
+    al_draw_text(font, al_map_rgb(192, 192, 192), char_width, status_bar_y + char_width + 4, ALLEGRO_ALIGN_LEFT, arrows);
+    al_draw_text(font, al_map_rgb(192, 192, 192), window_width - char_width, status_bar_y + char_width + 4, ALLEGRO_ALIGN_RIGHT, esc);
+    al_draw_text(font, al_map_rgb(192, 192, 192), char_width, status_bar_y + 2*char_width + 8, ALLEGRO_ALIGN_LEFT, enter);
 }
