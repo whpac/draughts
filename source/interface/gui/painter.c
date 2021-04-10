@@ -19,10 +19,11 @@
 #define CURSOR_GREEN_COLOR al_map_rgb(0, 255, 0)
 #define CURSOR_RED_COLOR al_map_rgb(255, 0, 0)
 #define CURSOR_GOLD_COLOR al_map_rgb(255, 204, 0)
+#define CURSOR_GRAY_COLOR al_map_rgb(172, 172, 172)
 
 void paintField(int row, int col);
 void paintPawn(Pawn* p, int row, int col);
-void paintCursor(Pawn* p, int row, int col, MarkerColor marker_color);
+void paintCursor(Pawn* p, int row, int col, MarkerColor marker_color, MarkerStyle marker_style);
 void paintStatus();
 
 float getFieldWidth(){
@@ -52,7 +53,7 @@ void paintBoard(Pawn** buffer, int board_size){
 
         int crow = marker->row;
         int ccol = marker->col;
-        paintCursor(buffer[crow * board_size + ccol], crow, ccol, marker->color);
+        paintCursor(buffer[crow * board_size + ccol], crow, ccol, marker->color, marker->style);
 
         markerDestroy(marker);
         listRemove(markers, 0, 0);
@@ -123,8 +124,9 @@ void paintPawn(Pawn* p, int row, int col){
  * @param row The row to point
  * @param col The column to point
  * @param marker_color The color of the marker
+ * @param marker_style The style of the marker
  */
-void paintCursor(Pawn* p, int row, int col, MarkerColor marker_color){
+void paintCursor(Pawn* p, int row, int col, MarkerColor marker_color, MarkerStyle marker_style){
     ALLEGRO_COLOR color = CURSOR_GREEN_COLOR;
 
     switch(marker_color){
@@ -137,13 +139,23 @@ void paintCursor(Pawn* p, int row, int col, MarkerColor marker_color){
         case gold:
             color = CURSOR_GOLD_COLOR;
             break;
+        case gray:
+            color = CURSOR_GRAY_COLOR;
+            break;
     }
 
-    al_draw_rectangle(
-        FIELD_WIDTH * col + 2.0, FIELD_WIDTH * row + 2.0,
-        FIELD_WIDTH * (col + 1) - 2.0, FIELD_WIDTH * (row + 1) - 2.0,
-        color, 4.0
-    );
+    if(marker_style == frame){
+        al_draw_rectangle(
+            FIELD_WIDTH * col + 2.0, FIELD_WIDTH * row + 2.0,
+            FIELD_WIDTH * (col + 1) - 2.0, FIELD_WIDTH * (row + 1) - 2.0,
+            color, 4.0
+        );
+    }else if(marker_style == point){
+        al_draw_filled_circle(
+            FIELD_WIDTH * (col + 0.5), FIELD_WIDTH * (row + 0.5),
+            3.0, color
+        );
+    }
 }
 
 /**

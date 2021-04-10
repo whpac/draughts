@@ -150,10 +150,14 @@ List* guiGetMarkers(){
     List* markers = listCreate();
     Marker* m;
 
+    // A reference point for possible target fields
+    int ref_row = cursorRow, ref_col = cursorCol;
+
     m = markerCreate();
     m->row = cursorRow;
     m->col = cursorCol;
     m->color = getCursorColor();
+    m->style = frame;
     listAdd(markers, m);
 
     if(guiIsFieldSelected()){
@@ -161,7 +165,34 @@ List* guiGetMarkers(){
         m->row = selectedRow;
         m->col = selectedCol;
         m->color = gold;
+        m->style = frame;
         listAdd(markers, m);
+
+        ref_row = selectedRow;
+        ref_col = selectedCol;
+    }
+
+    int moves_count = listGetLength(allowedMoves);
+    for(int i = 0; i < moves_count; i++){
+        TreeNode* n = listGet(allowedMoves, i);
+        Position* src_pos = treeGetNodeContent(n);
+
+        if(positionGetRow(src_pos) == ref_row && positionGetColumn(src_pos) == ref_col){
+            int target_count = treeGetChildNodesCount(n);
+            for(int j = 0; j < target_count; j++){
+                TreeNode* target = treeGetChildNode(n, j);
+                Position* target_pos = treeGetNodeContent(target);
+
+                m = markerCreate();
+                m->row = positionGetRow(target_pos);
+                m->col = positionGetColumn(target_pos);
+                m->color = gray;
+                m->style = point;
+                listAdd(markers, m);
+            }
+
+            break;
+        }
     }
 
     return markers;
