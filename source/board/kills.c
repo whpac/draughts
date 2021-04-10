@@ -6,7 +6,7 @@
 
 char isManAbleToKill(Pawn* p, int row, int col);
 char isKingAbleToKill(Pawn* p, int row, int col);
-int countPossibleKillsByMan(Pawn* p, int row, int col, int rfrom, int cfrom);
+TreeNode* getAllowedMovesFrom(Pawn* p, int row, int col);
 
 /**
  * Checks whether the pawn is able to kill any pawn on the board
@@ -166,6 +166,65 @@ TreeNode* getAllowedKillsFrom(Pawn* p, int row, int col){
                 }else{
                     treeDestroy(moves_subtree, 1);
                 }
+            }
+        }
+    }
+
+    return moves_tree;
+}
+
+/**
+ * Checks all possible non-killing moves and returns a list of these which are allowed. 
+ * The returned structure is a list of TreeNode's.
+ * @param color The player's color whose move it is
+ */
+List* getAllowedNonKillingMoves(PawnColor color){
+    List* allowed_moves = listCreate();
+    int max_kill_length = 1;
+
+    for(int row = 0; row < getBoardSize(); row++){
+        for(int col = 0; col < getBoardSize(); col++){
+            // Check if the source pawn is valid
+            Pawn* p = getPawnAt(row, col);
+            if(p == NULL) continue;
+            if(getPawnColor(p) != color) continue;
+
+            // Get legal moves from the source positions
+            TreeNode* moves_from_pos = getAllowedMovesFrom(p, row, col);
+            if(treeGetDepth(moves_from_pos) > 0) listAdd(allowed_moves, moves_from_pos);
+            else treeDestroy(moves_from_pos, 1);
+        }
+    }
+    return allowed_moves;
+}
+
+/**
+ * Returns all allowed non-killing moves from the given field
+ * @param p The pawn being moved
+ * @param row The source row
+ * @param col The source column
+ */
+TreeNode* getAllowedMovesFrom(Pawn* p, int row, int col){
+    int rdir[] = {1, 1, -1, -1};
+    int cdir[] = {1, -1, 1, -1};
+
+    TreeNode* moves_tree = treeCreate(positionCreate(row, col, p));
+    int max_depth = 0;
+
+    for(int i = 0; i < 4; i++){
+        int longest_move = isPawnKing(p) ? (getBoardSize() - 1) : 1;
+        for(int j = 1; j <= longest_move; j++){
+            int rto = row + j*rdir[i];
+            int cto = col + j*cdir[i];
+            if(checkMove(row, col, rto, cto) == MOVE_LEGAL){
+                // Check if it's a non-killing move
+                Position* killed_pos = getPawnAlongMove(row, col, rto, cto);
+                Pawn* killed_pawn = positionGetPawn(killed_pos);
+                positionDestroy(killed_pos);
+                if(killed_pawn != NULL) break;
+
+                TreeNode* target_subtree = treeCreate(positionCreate(rto, cto, NULL));
+                treeAddChildNode(moves_tree, target_subtree);
             }
         }
     }

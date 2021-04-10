@@ -8,5 +8,6 @@
 char isPawnAbleToKill(Pawn* p, int row, int col);
 TreeNode* getAllowedKillsFrom(Pawn* p, int row, int col);
 List* getAllowedKills(PawnColor color);
+List* getAllowedNonKillingMoves(PawnColor color);
 
 #endif

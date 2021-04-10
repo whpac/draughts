@@ -71,7 +71,8 @@ void guiLoadAllowedMovesCache(char only_from_cursor){
     }
 
     if(listGetLength(allowedMoves) == 0){
-        // Load non-killing moves into list
+        listDestroy(allowedMoves, 0);
+        allowedMoves = getAllowedNonKillingMoves(getNextMoveColor());
     }
 }
 
@@ -220,7 +221,7 @@ char isValidSourceField(int row, int col){
         }
     }
 
-    if(!is_valid && allowed_moves_length > 0) return 0;
+    if(!is_valid) return 0;
 
     return 1;
 }
