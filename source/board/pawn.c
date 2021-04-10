@@ -23,7 +23,7 @@ Pawn* createPawn(PawnColor color, char is_king){
 }
 
 /**
- * Destroys the pawn
+ * Frees the memory occupied by the pawn
  * @param pawn A pawn to be destroyed
  */
 void destroyPawn(Pawn* pawn){
@@ -49,7 +49,8 @@ char isPawnKing(Pawn* pawn){
 /**
  * Transforms the pawn to a king
  * @param pawn The pawn to transpform
+ * @param is_king Is the pawn king
  */
-void transformToKing(Pawn* pawn){
-    pawn->is_king = 1;
+void setIsPawnKing(Pawn* pawn, char is_king){
+    pawn->is_king = is_king;
 }

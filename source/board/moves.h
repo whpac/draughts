@@ -1,6 +1,8 @@
 #ifndef MOVES_H
 #define MOVES_H
 
+#include "position.h"
+
 #define MOVE_LEGAL 3000
 #define MOVE_DESTINATION_UNPLAYABLE 3001
 #define MOVE_DESTINATION_OCCUPIED 3002
@@ -15,5 +17,6 @@
 
 int checkMove(int rfrom, int cfrom, int rto, int cto);
 int getMoveLength(int rfrom, int cfrom, int rto, int cto);
+Position* getPawnAlongMove(int rfrom, int cfrom, int rto, int cto);
 
 #endif

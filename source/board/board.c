@@ -1,18 +1,38 @@
 #include<stddef.h>
+#include<malloc.h>
+
 #include "board.h"
 #include "moves.h"
 #include "kills.h"
+#include "position.h"
+#include "../data/stack.h"
+#include "../data/tree.h"
 
 #define BOARD_SIZE 8
-#define BOARD_FIELDS BOARD_SIZE * BOARD_SIZE
+#define BOARD_FIELDS (BOARD_SIZE * BOARD_SIZE)
+
+typedef struct MoveDescriptor {
+    Pawn* movedPawn;
+    int fromRow;
+    int fromCol;
+    int toRow;
+    int toCol;
+    char wasPawnKing;
+    char wasMoveRestricted;
+    Pawn* killedPawn;
+    int killedRow;
+    int killedCol;
+} MoveDescriptor;
 
 Pawn* board[BOARD_FIELDS];
 PawnColor nextMoveColor;
 int restrictedRow, restrictedCol;
+Stack* movesHistory;
 
+void destroyPawnAt(int row, int col);
 void restrictMovedPawn(int rfrom, int cfrom);
 char isMoveRestricted();
-int killPawnsAlongMove(int rfrom, int cfrom, int rto, int cto);
+Position* killPawnAlongMove(int rfrom, int cfrom, int rto, int cto);
 
 /**
  * Initializes the empty game board
@@ -20,11 +40,13 @@ int killPawnsAlongMove(int rfrom, int cfrom, int rto, int cto);
 void initBoard(){
     nextMoveColor = white;
     restrictedRow = restrictedCol = -1;
+    movesHistory = stackCreate();
     for(int i = 0; i < BOARD_FIELDS; i++){
         board[i] = NULL;
     }
 }
 
+/** Returns color of a player that's going to perform the next move. */
 PawnColor getNextMoveColor(){
     return nextMoveColor;
 }
@@ -101,9 +123,11 @@ void placePawnAt(Pawn* pawn, int row, int col){
 }
 
 /**
- * Destroys a pawn that is places at the given position
+ * Destroys a pawn that is placed at the given position. 
+ * Use only at the end of the game.
  * @param row The row where the pawn is placed
  * @param col The column where the pawn is placed
+ * @deprecated
  */
 void destroyPawnAt(int row, int col){
     Pawn* p = getPawnAt(row, col);
@@ -114,32 +138,111 @@ void destroyPawnAt(int row, int col){
 }
 
 /**
- * Moves a pawn across the board. It prevents from moving a pawn to 
- * an unplayable field or to an occupied one.
+ * Attempts to move a pawn across the board. It prevents from moving a pawn to 
+ * an unplayable field or to an occupied one. What's more, it does a check whether 
+ * the attempted move is optimal.
  * @param rfrom The source row
  * @param cfrom The source column
  * @param rto The destination row
  * @param cto The destination column
  */
-int movePawnAtTo(int rfrom, int cfrom, int rto, int cto){
+int attemptMovePawnAtTo(int rfrom, int cfrom, int rto, int cto){
+    Pawn *p = getPawnAt(rfrom, cfrom);
+    if(p == NULL) return MOVE_NO_SOURCE_PAWN;
+
+    List* allowed_kills_list;
+    char is_legal = 0;
+    int allowed_kills_list_length = 0;
+
+    // If the source field is restricted to only one pawn,
+    // check only kills originating from that field
     if(isMoveRestricted()){
         if(rfrom != restrictedRow || cfrom != restrictedCol)
             return BOARD_MUST_MOVE_ANOTHER_PAWN;
+
+        allowed_kills_list = listCreate();
+        listAdd(
+            allowed_kills_list,
+            getAllowedKillsFrom(p, rfrom, cfrom)
+        );
+    }else{
+        allowed_kills_list = getAllowedKills(getNextMoveColor());
+    }
+    // Empty kills list means that player has to perfom a non-killing move
+    // Thus, every move that is permitted by the rules is legal
+    allowed_kills_list_length = listGetLength(allowed_kills_list);
+    if(allowed_kills_list_length == 0) is_legal = 1;
+
+    // Traverse through the entire list to find the matching source field
+    for(int i = 0; i < allowed_kills_list_length && !is_legal; i++){
+        TreeNode* moves = listGet(allowed_kills_list, i);
+        Position* from = treeGetNodeContent(moves);
+
+        if(rfrom == positionGetRow(from) && cfrom == positionGetColumn(from)){
+            // Loop through the destinations to find the one requested by player
+            for(int i = 0; i < treeGetChildNodesCount(moves); i++){
+                TreeNode* child_node = treeGetChildNode(moves, i);
+                Position* to_pos = treeGetNodeContent(child_node);
+
+                if(rto == positionGetRow(to_pos) && cto == positionGetColumn(to_pos)){
+                    is_legal = 1;
+                    break;
+                }
+            }
+        }
     }
 
+    // Destroy every tree in a list and then destroy the list itself
+    for(int i = 0; i < allowed_kills_list_length; i++){
+        TreeNode* n = listGet(allowed_kills_list, 0);
+        treeDestroy(n, 1);
+        listRemove(allowed_kills_list, 0, 0);
+    }
+    listDestroy(allowed_kills_list, 0);
+
+    if(!is_legal)
+        return BOARD_MOVE_NOT_OPTIMAL;
+
+    return movePawnAtTo(p, rfrom, cfrom, rto, cto);
+}
+
+/**
+ * Moves a pawn across the board. It prevents from moving a pawn to 
+ * an unplayable field or to an occupied one. Doesn't check if the move is optimal. 
+ * attemptMovePawnAtTo() should be used to process user's requests.
+ * @param p The pawn being moved
+ * @param rfrom The source row
+ * @param cfrom The source column
+ * @param rto The destination row
+ * @param cto The destination column
+ */
+int movePawnAtTo(Pawn* p, int rfrom, int cfrom, int rto, int cto){
     int res = checkMove(rfrom, cfrom, rto, cto);
     if(res != MOVE_LEGAL) return res;
 
-    Pawn *p = getPawnAt(rfrom, cfrom);
-    if(p == NULL) return MOVE_NO_SOURCE_PAWN;
+    MoveDescriptor* md = malloc(sizeof(MoveDescriptor));
+    md->movedPawn = p;
+    md->fromRow = rfrom;
+    md->fromCol = cfrom;
+    md->toRow = rto;
+    md->toCol = cto;
+    md->wasPawnKing = isPawnKing(p);
+    md->wasMoveRestricted = isMoveRestricted();
 
     placePawnAt(p, rto, cto);
     placePawnAt(NULL, rfrom, cfrom);
 
-    int kills = killPawnsAlongMove(rfrom, cfrom, rto, cto);
+    stackPush(movesHistory, md);
+
+    Position* killed_pawn = killPawnAlongMove(rfrom, cfrom, rto, cto);
+    md->killedPawn = positionGetPawn(killed_pawn);
+    md->killedRow = positionGetRow(killed_pawn);
+    md->killedCol = positionGetColumn(killed_pawn);
+    positionDestroy(killed_pawn);
+    killed_pawn = NULL;
 
     // Check if there are more pawns to kill, but only if the previous move was a kill
-    if(kills > 0){
+    if(md->killedPawn != NULL){
         if(isPawnAbleToKill(p, rto, cto)){
             restrictMovedPawn(rto, cto);
             return BOARD_MOVE_NOT_FINISHED;
@@ -147,8 +250,8 @@ int movePawnAtTo(int rfrom, int cfrom, int rto, int cto){
     }
 
     PawnColor c = getPawnColor(p);
-    if(c == white && rto == BOARD_SIZE - 1) transformToKing(p);
-    if(c == black && rto == 0) transformToKing(p);
+    if(c == white && rto == BOARD_SIZE - 1) setIsPawnKing(p, 1);
+    if(c == black && rto == 0) setIsPawnKing(p, 1);
 
     nextMoveColor = !nextMoveColor;
     restrictMovedPawn(-1, -1);
@@ -157,28 +260,46 @@ int movePawnAtTo(int rfrom, int cfrom, int rto, int cto){
 }
 
 /**
- * Kills all pawns that are between (rfrom, cfrom) and (rto, cto).
+ * Kills a pawn that is between (rfrom, cfrom) and (rto, cto). 
+ * According to the rules and move checker, there is always at most one pawn killed during the move. 
+ * That's why the returned value is not an array or other list. 
+ * Returns the killed pawn and its position.
  * @param rfrom The source row
  * @param cfrom The source column
  * @param rto The destination row
  * @param cto The destination column
  */
-int killPawnsAlongMove(int rfrom, int cfrom, int rto, int cto){
-    int rdir = 1, cdir = 1;
-    if(rfrom > rto) rdir = -1;
-    if(cfrom > cto) cdir = -1;
+Position* killPawnAlongMove(int rfrom, int cfrom, int rto, int cto){
+    Position* killed = getPawnAlongMove(rfrom, cfrom, rto, cto);
+    int killed_row = positionGetRow(killed);
+    int killed_col = positionGetColumn(killed);
 
-    int len = rdir * (rto - rfrom);
-    Pawn* p;
-    int cnt = 0;
-    for(int i = 1; i < len; i++){
-        p = getPawnAt(rfrom + i*rdir, cfrom + i*cdir);
-        if(p == NULL) continue;
-
-        destroyPawnAt(rfrom + i*rdir, cfrom + i*cdir);
-        cnt++;
+    if(killed_col >= 0 && killed_row >= 0){
+        placePawnAt(NULL, killed_row, killed_col);
     }
-    return cnt;
+    return killed;
+}
+
+/** Discards the recently made move */
+void undoMove(){
+    MoveDescriptor* md = stackPop(movesHistory);
+    if(md == NULL) return;
+
+    placePawnAt(md->movedPawn, md->fromRow, md->fromCol);
+    placePawnAt(NULL, md->toRow, md->toCol);
+    setIsPawnKing(md->movedPawn, md->wasPawnKing);
+    placePawnAt(md->killedPawn, md->killedRow, md->killedCol);
+
+    if(md->wasMoveRestricted){
+        restrictMovedPawn(md->fromRow, md->fromCol);
+    }else{
+        restrictMovedPawn(-1, -1);
+    }
+
+    nextMoveColor = getPawnColor(md->movedPawn);
+
+    // This move descriptor is not useful anymore.
+    free(md);
 }
 
 /**
@@ -198,12 +319,11 @@ void createStartLayout(){
     }
 
     // Place black pawns
-    for (int row = BOARD_SIZE / 2 + 1; row < BOARD_SIZE; row++)
+    for(int row = BOARD_SIZE / 2 + 1; row < BOARD_SIZE; row++)
     {
-        for (int col = 0; col < BOARD_SIZE; col++)
+        for(int col = 0; col < BOARD_SIZE; col++)
         {
-            if (!isPlayableField(row, col))
-                continue;
+            if(!isPlayableField(row, col)) continue;
             p = createPawn(black, 0);
             placePawnAt(p, row, col);
         }
@@ -226,4 +346,21 @@ int countPawnsOfColor(PawnColor color){
     }
 
     return count;
+}
+
+/**
+ * Destroys the board and frees the memory. It is done by undoing 
+ * all the moves and clearing the board then.
+ */
+void destroyBoard(){
+    while(!stackIsEmpty(movesHistory)){
+        undoMove();
+    }
+    stackDestroy(movesHistory);
+
+    for(int row = 0; row < getBoardSize(); row++){
+        for(int col = 0; col < getBoardSize(); col++){
+            destroyPawnAt(row, col);
+        }
+    }
 }

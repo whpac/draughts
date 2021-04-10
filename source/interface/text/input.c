@@ -1,24 +1,19 @@
 #include<stdio.h>
-#include "text.h"
+#include "input.h"
 #include "cmd_processor.h"
-#include "../board/board.h"
-#include "../board/moves.h"
+#include "display.h"
+#include "../../board/board.h"
+#include "../../board/moves.h"
 
 char doInputIteration();
 void handleVictory(int white_count, int black_count);
 void handleError();
 int getIntArg();
 
-/** Pointer to a function responsible for displaying the game board */
-void (*boardDisplay)();
-
 /**
  * Begins the input loop.
- * @param board_display_func The procedure used to display the board
  */
-void beginInputLoop(void (*board_display_func)()){
-    boardDisplay = board_display_func;
-
+void beginInputLoop(){
     while(doInputIteration());
 }
 
@@ -28,7 +23,7 @@ void beginInputLoop(void (*board_display_func)()){
  */
 char doInputIteration(){
     printf("Current board:\n");
-    (*boardDisplay)();
+    displayBoard();
 
     int white_cnt = countPawnsOfColor(white);
     int black_cnt = countPawnsOfColor(black);
@@ -106,6 +101,12 @@ void handleError(int err_code){
             break;
         case MOVE_TOO_MANY_OBSTACLES_FOR_KING:
             printf("There are too many obstacles for the king along this move.\n");
+            break;
+        case BOARD_MUST_MOVE_ANOTHER_PAWN:
+            printf("You have to move a different pawn.\n");
+            break;
+        case BOARD_MOVE_NOT_OPTIMAL:
+            printf("There's another move with more kills.\n");
             break;
         default:
             printf("An unknown error occured. Code: %d\n", err_code);
