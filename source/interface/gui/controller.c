@@ -201,9 +201,9 @@ MarkerColor getCursorColor(){
  * @param col The column coordinate
  */
 char isValidSourceField(int row, int col){
-    Pawn* p = boardBuffer[cursorRow * getBoardSize() + cursorCol];
+    Pawn* p = boardBuffer[row * getBoardSize() + col];
 
-    if(!isPlayableField(cursorRow, cursorCol)) return 0;
+    if(!isPlayableField(row, col)) return 0;
     if(p == NULL) return 0;
     else if(getPawnColor(p) != getNextMoveColor()) return 0;
 
@@ -234,5 +234,35 @@ char isValidSourceField(int row, int col){
  * @param cto The destination column
  */
 char isValidDestinationField(int rfrom, int cfrom, int rto, int cto){
+    Pawn* p = boardBuffer[rto * getBoardSize() + cto];
+
+    if(!isPlayableField(rto, cto)) return 0;
+    if(p != NULL) return 0;
+
+    int allowed_moves_length = listGetLength(allowedMoves);
+
+    char is_valid = 0;
+    // Look for the requested source field
+    for(int i = 0; i < allowed_moves_length && !is_valid; i++){
+        TreeNode* n = listGet(allowedMoves, i);
+        Position* pos = treeGetNodeContent(n);
+
+        if(positionGetRow(pos) == rfrom && positionGetColumn(pos) == cfrom){
+            int tree_nodes_cnt = treeGetChildNodesCount(n);
+            // Look for the destination field
+            for(int j = 0; j < tree_nodes_cnt; j++){
+                TreeNode* target = treeGetChildNode(n, j);
+                Position* target_pos = treeGetNodeContent(target);
+
+                if(positionGetRow(target_pos) == rto && positionGetColumn(target_pos) == cto){
+                    is_valid = 1;
+                    break;
+                }
+            }
+        }
+    }
+
+    if(!is_valid) return 0;
+
     return 1;
 }
