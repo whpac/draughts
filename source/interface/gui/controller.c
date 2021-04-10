@@ -1,6 +1,11 @@
+#include<stddef.h>
 #include<malloc.h>
 #include<allegro5/allegro5.h>
 #include "../../board/board.h"
+#include "../../board/kills.h"
+#include "../../board/position.h"
+#include "../../data/tree.h"
+#include "../../data/list.h"
 #include "controller.h"
 #include "marker.h"
 #include "painter.h"
@@ -9,8 +14,12 @@ int cursorRow = 0, cursorCol = 0;
 int selectedRow = -1, selectedCol = -1;
 char selectionFrozen = 0;
 Pawn** boardBuffer;
+List* allowedMoves = NULL;
 enum { waitingForSource, waitingForDestination } currentState;
 
+void guiReloadBoard();
+void guiLoadAllowedMovesCache(char only_from_cursor);
+void guiDestroyAllowedMovesCache();
 MarkerColor getCursorColor();
 void guiDeselectField(char unfreeze);
 char isValidSourceField(int row, int col);
@@ -20,11 +29,15 @@ char isValidDestinationField(int rfrom, int cfrom, int rto, int cto);
 void guiInitController(){
     boardBuffer = malloc(sizeof(Pawn*) * getBoardSize() * getBoardSize());
     currentState = waitingForSource;
+
+    guiReloadBoard();
+    guiLoadAllowedMovesCache(0);
 }
 
 /** Deinitializes the controller */
 void guiDeinitController(){
     free(boardBuffer);
+    guiDestroyAllowedMovesCache();
 }
 
 /** Forces the program to read the current board state and repaint it */
@@ -41,6 +54,38 @@ void guiReloadBoard(){
             boardBuffer[row * size + col] = getPawnAt(row, col);
         }
     }
+}
+
+/**
+ * Loads the list of allowed moves
+ * @param only_from_cursor Whether to check only those moves originating from cursor
+ */
+void guiLoadAllowedMovesCache(char only_from_cursor){
+    guiDestroyAllowedMovesCache();
+    if(!only_from_cursor){
+        allowedMoves = getAllowedKills(getNextMoveColor());
+    }else{
+        allowedMoves = listCreate();
+        listAdd(allowedMoves,
+            getAllowedKillsFrom(getPawnAt(cursorRow, cursorCol), cursorRow, cursorCol));
+    }
+
+    if(listGetLength(allowedMoves) == 0){
+        // Load non-killing moves into list
+    }
+}
+
+/** Destroys the list of allowed moves */
+void guiDestroyAllowedMovesCache(){
+    if(allowedMoves == NULL) return;
+
+    int allowed_moves_length = listGetLength(allowedMoves);
+    for(int i = 0; i < allowed_moves_length; i++){
+        TreeNode* n = listGet(allowedMoves, 0);
+        treeDestroy(n, 1);
+        listRemove(allowedMoves, 0, 0);
+    }
+    listDestroy(allowedMoves, 0);
 }
 
 /**
@@ -130,6 +175,7 @@ int guiAttemptMoveFromSelectedToCursor(){
     if(result == BOARD_MOVE_SUCCESSFUL || result == BOARD_MOVE_NOT_FINISHED){
         guiDeselectField(1);
         guiReloadBoard();
+        guiLoadAllowedMovesCache(result == BOARD_MOVE_NOT_FINISHED);
     }
 
     if(result == BOARD_MOVE_NOT_FINISHED){
@@ -159,6 +205,22 @@ char isValidSourceField(int row, int col){
     if(!isPlayableField(cursorRow, cursorCol)) return 0;
     if(p == NULL) return 0;
     else if(getPawnColor(p) != getNextMoveColor()) return 0;
+
+    int allowed_moves_length = listGetLength(allowedMoves);
+
+    // Check for the requested source field
+    char is_valid = 0;
+    for(int i = 0; i < allowed_moves_length; i++){
+        TreeNode* n = listGet(allowedMoves, i);
+        Position* pos = treeGetNodeContent(n);
+
+        if(positionGetRow(pos) == row && positionGetColumn(pos) == col){
+            is_valid = 1;
+            break;
+        }
+    }
+
+    if(!is_valid && allowed_moves_length > 0) return 0;
 
     return 1;
 }

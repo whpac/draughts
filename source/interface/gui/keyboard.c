@@ -4,7 +4,6 @@
 #include "keyboard.h"
 
 void guiBeginInputLoop(){
-    guiReloadBoard();
     guiPaintBoard();
 
     ALLEGRO_EVENT event;
