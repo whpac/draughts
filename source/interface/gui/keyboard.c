@@ -51,6 +51,6 @@ void guiBeginInputLoop(){
             break;
 
         if(redraw)
-            guiPaintBoard();
+            guiPaint();
     }
 }

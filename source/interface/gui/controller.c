@@ -40,10 +40,9 @@ void guiDeinitController(){
     guiDestroyAllowedMovesCache();
 }
 
-/** Forces the program to read the current board state and repaint it */
+/** Forces the program to repaint the board */
 void guiPaintBoard(){
     paintBoard(boardBuffer, getBoardSize());
-    al_flip_display();
 }
 
 /** Copies the board to the internal buffer. This prevents blinking when game is predicting moves */

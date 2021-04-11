@@ -9,7 +9,7 @@
 #include "marker.h"
 #include "display.h"
 
-#define FIELD_WIDTH 60.0
+#define FIELD_WIDTH 30.0
 #define WHITE_FIELD al_map_rgb(172, 172, 172)
 #define BLACK_FIELD al_map_rgb(0, 102, 102)
 #define WHITE_PAWN_FILL al_map_rgb(255, 255, 255)
@@ -20,10 +20,12 @@
 #define CURSOR_RED_COLOR al_map_rgb(255, 0, 0)
 #define CURSOR_GOLD_COLOR al_map_rgb(255, 204, 0)
 #define CURSOR_GRAY_COLOR al_map_rgb(172, 172, 172)
+#define FRAME_CURSOR_THICKNESS 2.0
+#define POINT_CURSOR_RADIUS 3.0
 
 void paintField(int row, int col);
 void paintPawn(Pawn* p, int row, int col);
-void paintCursor(Pawn* p, int row, int col, MarkerColor marker_color, MarkerStyle marker_style);
+void paintMarker(int row, int col, MarkerColor marker_color, MarkerStyle marker_style);
 void paintStatus();
 
 float getFieldWidth(){
@@ -53,7 +55,7 @@ void paintBoard(Pawn** buffer, int board_size){
 
         int crow = marker->row;
         int ccol = marker->col;
-        paintCursor(buffer[crow * board_size + ccol], crow, ccol, marker->color, marker->style);
+        paintMarker(crow, ccol, marker->color, marker->style);
 
         markerDestroy(marker);
         listRemove(markers, 0, 0);
@@ -119,14 +121,13 @@ void paintPawn(Pawn* p, int row, int col){
 }
 
 /**
- * Paints the cursor on a given position.
- * @param p The pawn pointed at by the cursor
+ * Paints the marker on a given position.
  * @param row The row to point
  * @param col The column to point
  * @param marker_color The color of the marker
  * @param marker_style The style of the marker
  */
-void paintCursor(Pawn* p, int row, int col, MarkerColor marker_color, MarkerStyle marker_style){
+void paintMarker(int row, int col, MarkerColor marker_color, MarkerStyle marker_style){
     ALLEGRO_COLOR color = CURSOR_GREEN_COLOR;
 
     switch(marker_color){
@@ -146,14 +147,14 @@ void paintCursor(Pawn* p, int row, int col, MarkerColor marker_color, MarkerStyl
 
     if(marker_style == frame){
         al_draw_rectangle(
-            FIELD_WIDTH * col + 2.0, FIELD_WIDTH * row + 2.0,
-            FIELD_WIDTH * (col + 1) - 2.0, FIELD_WIDTH * (row + 1) - 2.0,
-            color, 4.0
+            FIELD_WIDTH * col + 0.5 * FRAME_CURSOR_THICKNESS, FIELD_WIDTH * row + 0.5 * FRAME_CURSOR_THICKNESS,
+            FIELD_WIDTH * (col + 1) - 0.5 * FRAME_CURSOR_THICKNESS, FIELD_WIDTH * (row + 1) - 0.5 * FRAME_CURSOR_THICKNESS,
+            color, FRAME_CURSOR_THICKNESS
         );
     }else if(marker_style == point){
         al_draw_filled_circle(
             FIELD_WIDTH * (col + 0.5), FIELD_WIDTH * (row + 0.5),
-            3.0, color
+            POINT_CURSOR_RADIUS, color
         );
     }
 }
@@ -173,26 +174,26 @@ void paintStatus(){
     black_pawns = countPawnsOfColor(black);
 
     // Print white's stats
-    al_draw_text(font, al_map_rgb(192, 192, 192), char_width, status_bar_y, ALLEGRO_ALIGN_LEFT, "WHITE");
+    al_draw_text(font, al_map_rgb(192, 192, 192), 0.5 * char_width, status_bar_y, ALLEGRO_ALIGN_LEFT, "WHITE");
     sprintf(str_buffer, "%02d", white_pawns % 100);
-    al_draw_text(font, al_map_rgb(192, 192, 192), 8 * char_width, status_bar_y, ALLEGRO_ALIGN_LEFT, str_buffer);
+    al_draw_text(font, al_map_rgb(192, 192, 192), 6.5 * char_width, status_bar_y, ALLEGRO_ALIGN_LEFT, str_buffer);
 
     // Print black's stats
-    al_draw_text(font, al_map_rgb(192, 192, 192), window_width - char_width, status_bar_y, ALLEGRO_ALIGN_RIGHT, "BLACK");
+    al_draw_text(font, al_map_rgb(192, 192, 192), window_width - 0.5 * char_width, status_bar_y, ALLEGRO_ALIGN_RIGHT, "BLACK");
     sprintf(str_buffer, "%02d", black_pawns % 100);
-    al_draw_text(font, al_map_rgb(192, 192, 192), window_width - 8 * char_width, status_bar_y, ALLEGRO_ALIGN_RIGHT, str_buffer);
+    al_draw_text(font, al_map_rgb(192, 192, 192), window_width - 6.5 * char_width, status_bar_y, ALLEGRO_ALIGN_RIGHT, str_buffer);
 
-    char* move_indicator = "< MOVE  ";
-    if(getNextMoveColor() == black) move_indicator = "  MOVE >";
-    if(white_pawns == 0) move_indicator = "GAME OVER! BLACK has won!";
-    if(black_pawns == 0) move_indicator = "GAME OVER! WHITE has won!";
+    char* move_indicator = "<MOVE ";
+    if(getNextMoveColor() == black) move_indicator = " MOVE>";
 
     al_draw_text(font, al_map_rgb(192, 192, 192), window_width / 2, status_bar_y, ALLEGRO_ALIGN_CENTER, move_indicator);
 
-    char* arrows = "Use ARROW keys to move";
-    char* esc = "Press ESC to exit";
-    char* enter = "ENTER selects a pawn to move and confirms the target field";
-    al_draw_text(font, al_map_rgb(192, 192, 192), char_width, status_bar_y + char_width + 4, ALLEGRO_ALIGN_LEFT, arrows);
-    al_draw_text(font, al_map_rgb(192, 192, 192), window_width - char_width, status_bar_y + char_width + 4, ALLEGRO_ALIGN_RIGHT, esc);
-    al_draw_text(font, al_map_rgb(192, 192, 192), char_width, status_bar_y + 2*char_width + 8, ALLEGRO_ALIGN_LEFT, enter);
+    char* arrows = "ARROWS: move";
+    char* esc = "ESC: exit";
+    char* enter = "ENTER: select";
+    char* undo = "U: undo";
+    al_draw_text(font, al_map_rgb(192, 192, 192), 0.5 * char_width, status_bar_y + char_width + 4, ALLEGRO_ALIGN_LEFT, arrows);
+    al_draw_text(font, al_map_rgb(192, 192, 192), window_width - 0.5 * char_width, status_bar_y + char_width + 4, ALLEGRO_ALIGN_RIGHT, esc);
+    al_draw_text(font, al_map_rgb(192, 192, 192), 0.5 * char_width, status_bar_y + 2*char_width + 8, ALLEGRO_ALIGN_LEFT, enter);
+    al_draw_text(font, al_map_rgb(192, 192, 192), window_width - 0.5 * char_width, status_bar_y + 2*char_width + 8, ALLEGRO_ALIGN_RIGHT, undo);
 }

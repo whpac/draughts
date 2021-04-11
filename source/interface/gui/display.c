@@ -7,10 +7,15 @@
 #include "../../board/board.h"
 #include "../../board/pawn.h"
 
+#define DISPLAY_SCALE 2.0
+
 ALLEGRO_TIMER* timer;
 ALLEGRO_EVENT_QUEUE* queue;
 ALLEGRO_DISPLAY* disp;
+ALLEGRO_BITMAP* buffer;
 ALLEGRO_FONT* font;
+
+int buffer_w, buffer_h;
 
 /** Initializes the GUI. Returns 0 on failure. */
 char guiInit(){
@@ -24,16 +29,16 @@ char guiInit(){
     queue = al_create_event_queue();
 
     al_set_new_window_title("Draughts");
-    al_set_new_display_option(ALLEGRO_SAMPLE_BUFFERS, 1, ALLEGRO_SUGGEST);
-    al_set_new_display_option(ALLEGRO_SAMPLES, 8, ALLEGRO_SUGGEST);
-    disp = al_create_display(getBoardSize() * getFieldWidth(), getBoardSize() * getFieldWidth() + 40);
+
+    buffer_w = getBoardSize() * getFieldWidth();
+    buffer_h = getBoardSize() * getFieldWidth() + 40;
+    disp = al_create_display(buffer_w * DISPLAY_SCALE, buffer_h * DISPLAY_SCALE);
+    buffer = al_create_bitmap(buffer_w, buffer_h);
+
     font = al_create_builtin_font();
 
-    if(!timer || !queue || !disp || !font){
-        al_destroy_font(font);
-        al_destroy_display(disp);
-        al_destroy_timer(timer);
-        al_destroy_event_queue(queue);
+    if(!timer || !queue || !disp || !buffer || !font){
+        guiDestroy();
         return 0;
     }
 
@@ -48,8 +53,20 @@ char guiInit(){
 void guiDestroy(){
     al_destroy_font(font);
     al_destroy_display(disp);
+    al_destroy_bitmap(buffer);
     al_destroy_timer(timer);
     al_destroy_event_queue(queue);
+    guiDeinitController();
+}
+
+/** Orders the game to paint the display */
+void guiPaint(){
+    al_set_target_bitmap(buffer);
+    guiPaintBoard();
+
+    al_set_target_backbuffer(disp);
+    al_draw_scaled_bitmap(buffer, 0, 0, buffer_w, buffer_h, 0, 0, buffer_w * DISPLAY_SCALE, buffer_h * DISPLAY_SCALE, 0);
+    al_flip_display();
 }
 
 /** Returns the GUI timer */
