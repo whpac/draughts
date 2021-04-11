@@ -15,6 +15,8 @@ PawnColor getNextMoveColor();
 char isInBoard(int row, int col);
 char isPlayableField(int row, int col);
 
+char isMoveRestricted();
+
 Pawn* getPawnAt(int row, int col);
 void placePawnAt(Pawn* pawn, int row, int col);
 int attemptMovePawnAtTo(int rfrom, int cfrom, int rto, int cto);

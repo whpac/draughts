@@ -38,6 +38,9 @@ void guiBeginInputLoop(){
                     }
                 }
 
+                if(event.keyboard.keycode == ALLEGRO_KEY_U)
+                    guiAttemptUndo();
+
                 if(event.keyboard.keycode == ALLEGRO_KEY_ESCAPE)
                     done = true;
                 break;

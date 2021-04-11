@@ -31,7 +31,6 @@ Stack* movesHistory;
 
 void destroyPawnAt(int row, int col);
 void restrictMovedPawn(int rfrom, int cfrom);
-char isMoveRestricted();
 Position* killPawnAlongMove(int rfrom, int cfrom, int rto, int cto);
 
 /**

@@ -14,6 +14,7 @@ char guiIsFieldSelected();
 char guiIsCurrentFieldSelected();
 
 int guiAttemptMoveFromSelectedToCursor();
+void guiAttemptUndo();
 
 List* guiGetMarkers();
 

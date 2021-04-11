@@ -6,6 +6,7 @@
 #include "../../board/position.h"
 #include "../../data/tree.h"
 #include "../../data/list.h"
+#include "../../data/stack.h"
 #include "controller.h"
 #include "marker.h"
 #include "painter.h"
@@ -15,6 +16,7 @@ int selectedRow = -1, selectedCol = -1;
 char selectionFrozen = 0;
 Pawn** boardBuffer;
 List* allowedMoves = NULL;
+Stack* cursorStack = NULL;
 enum { waitingForSource, waitingForDestination } currentState;
 
 void guiReloadBoard();
@@ -29,6 +31,7 @@ char isValidDestinationField(int rfrom, int cfrom, int rto, int cto);
 void guiInitController(){
     boardBuffer = malloc(sizeof(Pawn*) * getBoardSize() * getBoardSize());
     currentState = waitingForSource;
+    cursorStack = stackCreate();
 
     guiReloadBoard();
     guiLoadAllowedMovesCache(0);
@@ -38,6 +41,12 @@ void guiInitController(){
 void guiDeinitController(){
     free(boardBuffer);
     guiDestroyAllowedMovesCache();
+
+    while(!stackIsEmpty(cursorStack)){
+        Position* pos = stackPop(cursorStack);
+        positionDestroy(pos);
+    }
+    stackDestroy(cursorStack);
 }
 
 /** Forces the program to repaint the board */
@@ -204,16 +213,34 @@ int guiAttemptMoveFromSelectedToCursor(){
     int result = attemptMovePawnAtTo(selectedRow, selectedCol, cursorRow, cursorCol);
 
     if(result == BOARD_MOVE_SUCCESSFUL || result == BOARD_MOVE_NOT_FINISHED){
+        Position* from = positionCreate(selectedRow, selectedCol, NULL);
+        stackPush(cursorStack, from);
+
         guiDeselectField(1);
         guiReloadBoard();
-        guiLoadAllowedMovesCache(result == BOARD_MOVE_NOT_FINISHED);
+        guiLoadAllowedMovesCache(isMoveRestricted());
     }
 
-    if(result == BOARD_MOVE_NOT_FINISHED){
+    if(isMoveRestricted()){
         guiSelectCurrentField(1);
     }
 
     return result;
+}
+
+/** Tries to undo the recently made move */
+void guiAttemptUndo(){
+    undoMove();
+    guiDeselectField(1);
+    guiReloadBoard();
+
+    Position* from = stackPop(cursorStack);
+    cursorRow = positionGetRow(from);
+    cursorCol = positionGetColumn(from);
+    positionDestroy(from);
+
+    guiLoadAllowedMovesCache(isMoveRestricted());
+    guiSelectCurrentField(isMoveRestricted());
 }
 
 /** Returns a color for the cursor */
