@@ -8,6 +8,7 @@
 #include "controller.h"
 #include "marker.h"
 #include "display.h"
+#include "message.h"
 
 #define FIELD_WIDTH 30.0
 #define WHITE_FIELD al_map_rgb(172, 172, 172)
@@ -22,11 +23,17 @@
 #define CURSOR_GRAY_COLOR al_map_rgb(172, 172, 172)
 #define FRAME_CURSOR_THICKNESS 2.0
 #define POINT_CURSOR_RADIUS 3.0
+#define DARK_GRAY_TEXT al_map_rgb(96, 96, 96)
+#define DARK_WHITE_TEXT al_map_rgb(192, 192, 192)
+#define LIGHT_WHITE_TEXT al_map_rgb(255, 255, 255)
+#define MESSAGE_BACKGROUND al_map_rgb(96, 0, 0)
+#define CHAR_WIDTH 8.0
 
 void paintField(int row, int col);
 void paintPawn(Pawn* p, int row, int col);
 void paintMarker(int row, int col, MarkerColor marker_color, MarkerStyle marker_style);
 void paintStatus();
+void paintMessage();
 
 float getFieldWidth(){
     return FIELD_WIDTH;
@@ -49,20 +56,23 @@ void paintBoard(Pawn** buffer, int board_size){
         }
     }
 
-    List* markers = guiGetMarkers();
-    while(listGetLength(markers) > 0){
-        Marker* marker = listGet(markers, 0);
+    if(!isGameOver()){
+        List* markers = guiGetMarkers();
+        while(listGetLength(markers) > 0){
+            Marker* marker = listGet(markers, 0);
 
-        int crow = marker->row;
-        int ccol = marker->col;
-        paintMarker(crow, ccol, marker->color, marker->style);
+            int crow = marker->row;
+            int ccol = marker->col;
+            paintMarker(crow, ccol, marker->color, marker->style);
 
-        markerDestroy(marker);
-        listRemove(markers, 0, 0);
+            markerDestroy(marker);
+            listRemove(markers, 0, 0);
+        }
+        listDestroy(markers, 0);
     }
-    listDestroy(markers, 0);
 
     paintStatus();
+    paintMessage();
 }
 
 /**
@@ -166,34 +176,52 @@ void paintStatus(){
     ALLEGRO_FONT* font = guiGetFont();
     float status_bar_y = getBoardSize() * FIELD_WIDTH + 4;
     float window_width = getBoardSize() * FIELD_WIDTH;
-    float char_width = 8;
+    char over = isGameOver();
     char str_buffer[3];
-    int white_pawns, black_pawns;
 
-    white_pawns = countPawnsOfColor(white);
-    black_pawns = countPawnsOfColor(black);
+    int white_pawns = countPawnsOfColor(white);
+    int black_pawns = countPawnsOfColor(black);
 
     // Print white's stats
-    al_draw_text(font, al_map_rgb(192, 192, 192), 0.5 * char_width, status_bar_y, ALLEGRO_ALIGN_LEFT, "WHITE");
+    al_draw_text(font, DARK_WHITE_TEXT, 0.5 * CHAR_WIDTH, status_bar_y, ALLEGRO_ALIGN_LEFT, "WHITE");
     sprintf(str_buffer, "%02d", white_pawns % 100);
-    al_draw_text(font, al_map_rgb(192, 192, 192), 6.5 * char_width, status_bar_y, ALLEGRO_ALIGN_LEFT, str_buffer);
+    al_draw_text(font, DARK_WHITE_TEXT, 6.5 * CHAR_WIDTH, status_bar_y, ALLEGRO_ALIGN_LEFT, str_buffer);
 
     // Print black's stats
-    al_draw_text(font, al_map_rgb(192, 192, 192), window_width - 0.5 * char_width, status_bar_y, ALLEGRO_ALIGN_RIGHT, "BLACK");
+    al_draw_text(font, DARK_WHITE_TEXT, window_width - 0.5 * CHAR_WIDTH, status_bar_y, ALLEGRO_ALIGN_RIGHT, "BLACK");
     sprintf(str_buffer, "%02d", black_pawns % 100);
-    al_draw_text(font, al_map_rgb(192, 192, 192), window_width - 6.5 * char_width, status_bar_y, ALLEGRO_ALIGN_RIGHT, str_buffer);
+    al_draw_text(font, DARK_WHITE_TEXT, window_width - 6.5 * CHAR_WIDTH, status_bar_y, ALLEGRO_ALIGN_RIGHT, str_buffer);
 
     char* move_indicator = "<MOVE ";
     if(getNextMoveColor() == black) move_indicator = " MOVE>";
 
-    al_draw_text(font, al_map_rgb(192, 192, 192), window_width / 2, status_bar_y, ALLEGRO_ALIGN_CENTER, move_indicator);
+    if(!over) al_draw_text(font, DARK_WHITE_TEXT, window_width / 2, status_bar_y, ALLEGRO_ALIGN_CENTER, move_indicator);
 
     char* arrows = "ARROWS: move";
     char* esc = "ESC: exit";
     char* enter = "ENTER: select";
     char* undo = "U: undo";
-    al_draw_text(font, al_map_rgb(192, 192, 192), 0.5 * char_width, status_bar_y + char_width + 4, ALLEGRO_ALIGN_LEFT, arrows);
-    al_draw_text(font, al_map_rgb(192, 192, 192), window_width - 0.5 * char_width, status_bar_y + char_width + 4, ALLEGRO_ALIGN_RIGHT, esc);
-    al_draw_text(font, al_map_rgb(192, 192, 192), 0.5 * char_width, status_bar_y + 2*char_width + 8, ALLEGRO_ALIGN_LEFT, enter);
-    al_draw_text(font, al_map_rgb(192, 192, 192), window_width - 0.5 * char_width, status_bar_y + 2*char_width + 8, ALLEGRO_ALIGN_RIGHT, undo);
+    al_draw_text(font, over ? DARK_GRAY_TEXT : DARK_WHITE_TEXT, 0.5 * CHAR_WIDTH, status_bar_y + CHAR_WIDTH + 4, ALLEGRO_ALIGN_LEFT, arrows);
+    al_draw_text(font, DARK_WHITE_TEXT, window_width - 0.5 * CHAR_WIDTH, status_bar_y + CHAR_WIDTH + 4, ALLEGRO_ALIGN_RIGHT, esc);
+    al_draw_text(font, over ? DARK_GRAY_TEXT : DARK_WHITE_TEXT, 0.5 * CHAR_WIDTH, status_bar_y + 2*CHAR_WIDTH + 8, ALLEGRO_ALIGN_LEFT, enter);
+    al_draw_text(font, DARK_WHITE_TEXT, window_width - 0.5 * CHAR_WIDTH, status_bar_y + 2*CHAR_WIDTH + 8, ALLEGRO_ALIGN_RIGHT, undo);
+}
+
+/**
+ * Displays the message box
+ */
+void paintMessage(){
+    if(!isMessageShown()) return;
+
+    ALLEGRO_FONT* font = guiGetFont();
+    float board_length = getBoardSize() * FIELD_WIDTH;
+    float stripe_height = 6 * CHAR_WIDTH;
+    al_draw_filled_rectangle(
+        0, (board_length - stripe_height) / 2,
+        board_length, (board_length + stripe_height) / 2,
+        MESSAGE_BACKGROUND
+    );
+
+    al_draw_text(font, LIGHT_WHITE_TEXT, board_length / 2, (board_length - stripe_height) / 2 + CHAR_WIDTH, ALLEGRO_ALIGN_CENTER, getMessageTitle());
+    al_draw_text(font, LIGHT_WHITE_TEXT, board_length / 2, (board_length - stripe_height) / 2 + CHAR_WIDTH * 3, ALLEGRO_ALIGN_CENTER, getMessageContent());
 }
