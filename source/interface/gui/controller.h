@@ -16,6 +16,7 @@ char guiIsCurrentFieldSelected();
 int guiAttemptMoveFromSelectedToCursor();
 void guiAttemptUndo();
 
+char isGameOver();
 List* guiGetMarkers();
 
 #endif

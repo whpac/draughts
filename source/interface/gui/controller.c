@@ -10,6 +10,7 @@
 #include "controller.h"
 #include "marker.h"
 #include "painter.h"
+#include "message.h"
 
 int cursorRow = 0, cursorCol = 0;
 int selectedRow = -1, selectedCol = -1;
@@ -17,9 +18,10 @@ char selectionFrozen = 0;
 Pawn** boardBuffer;
 List* allowedMoves = NULL;
 Stack* cursorStack = NULL;
-enum { waitingForSource, waitingForDestination } currentState;
+enum { waitingForSource, waitingForDestination, gameOver } currentState;
 
 void guiReloadBoard();
+void guiAfterMove();
 void guiLoadAllowedMovesCache(char only_from_cursor);
 void guiDestroyAllowedMovesCache();
 MarkerColor getCursorColor();
@@ -225,11 +227,27 @@ int guiAttemptMoveFromSelectedToCursor(){
         guiSelectCurrentField(1);
     }
 
+    guiAfterMove();
+
     return result;
+}
+
+void guiAfterMove(){
+    int white_pawns = countPawnsOfColor(white);
+    int black_pawns = countPawnsOfColor(black);
+
+    if(white_pawns == 0 || black_pawns == 0){
+        char* message = white_pawns == 0 ? "WHITE lost their last pawn." : "BLACK lost their last pawn.";
+
+        displayMessage("GAME OVER", message);
+        currentState = gameOver;
+    }
 }
 
 /** Tries to undo the recently made move */
 void guiAttemptUndo(){
+    if(currentState == gameOver) hideMessage();
+
     undoMove();
     guiDeselectField(1);
     guiReloadBoard();
@@ -241,6 +259,13 @@ void guiAttemptUndo(){
 
     guiLoadAllowedMovesCache(isMoveRestricted());
     guiSelectCurrentField(isMoveRestricted());
+
+    guiAfterMove();
+}
+
+/** Returns whether the game is over */
+char isGameOver(){
+    return currentState == gameOver;
 }
 
 /** Returns a color for the cursor */
