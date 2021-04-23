@@ -6,9 +6,11 @@
 #include "interface/text/input.h"
 #include "interface/gui/display.h"
 #include "interface/gui/keyboard.h"
+#include "log/logger.h"
 
 int main()
 {
+    logInit();
     initBoard();
 
     createStartLayout();
@@ -22,5 +24,8 @@ int main()
     }
 
     destroyBoard();
+
+    saveLog();
+    logDeinit();
     return 0;
 }
