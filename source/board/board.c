@@ -7,6 +7,7 @@
 #include "position.h"
 #include "../data/stack.h"
 #include "../data/tree.h"
+#include "../log/logger.h"
 
 #define BOARD_SIZE 8
 #define BOARD_FIELDS (BOARD_SIZE * BOARD_SIZE)
@@ -202,7 +203,13 @@ int attemptMovePawnAtTo(int rfrom, int cfrom, int rto, int cto){
     if(!is_legal)
         return BOARD_MOVE_NOT_OPTIMAL;
 
-    return movePawnAtTo(p, rfrom, cfrom, rto, cto);
+    int res = movePawnAtTo(p, rfrom, cfrom, rto, cto);
+
+    if(res == BOARD_MOVE_SUCCESSFUL || res == BOARD_MOVE_NOT_FINISHED){
+        logMove(rfrom, cfrom, rto, cto, getPawnColor(p));
+    }
+
+    return res;
 }
 
 /**
@@ -281,6 +288,12 @@ Position* killPawnAlongMove(int rfrom, int cfrom, int rto, int cto){
 
 /** Discards the recently made move */
 void undoMove(){
+    undoMoveWithoutLogging();
+    logUndo();
+}
+
+/** Discards the recently made move without any logging */
+void undoMoveWithoutLogging(){
     MoveDescriptor* md = stackPop(movesHistory);
     if(md == NULL) return;
 
@@ -353,7 +366,7 @@ int countPawnsOfColor(PawnColor color){
  */
 void destroyBoard(){
     while(!stackIsEmpty(movesHistory)){
-        undoMove();
+        undoMoveWithoutLogging();
     }
     stackDestroy(movesHistory);
 

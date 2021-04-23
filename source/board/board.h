@@ -22,6 +22,7 @@ void placePawnAt(Pawn* pawn, int row, int col);
 int attemptMovePawnAtTo(int rfrom, int cfrom, int rto, int cto);
 int movePawnAtTo(Pawn* p, int rfrom, int cfrom, int rto, int cto);
 void undoMove();
+void undoMoveWithoutLogging();
 
 void createStartLayout();
 int countPawnsOfColor(PawnColor color);
