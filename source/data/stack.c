@@ -58,7 +58,7 @@ void stackPush(Stack* s, void* e){
 
 /**
  * Pops a pointer from the stack. If stack is empty, returns NULL.
- * @param s The stack to push an element from
+ * @param s The stack to pop an element from
  */
 void* stackPop(Stack* s){
     if(s->top == NULL) return NULL;
@@ -70,4 +70,16 @@ void* stackPop(Stack* s){
     free(se);
 
     return elem;
+}
+
+/**
+ * Peeks a pointer from the stack. If stack is empty, returns NULL. 
+ * Doesn't remove the topmost element from the stack.
+ * @param s The stack to peek an element from
+ */
+void* stackPeek(Stack* s){
+    if(s->top == NULL) return NULL;
+
+    StackElem* se = s->top;
+    return se->elem;
 }
