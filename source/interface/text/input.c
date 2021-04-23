@@ -13,7 +13,7 @@ int getIntArg();
 /**
  * Begins the input loop.
  */
-void beginInputLoop(){
+void cliBeginInputLoop(){
     while(doInputIteration());
 }
 

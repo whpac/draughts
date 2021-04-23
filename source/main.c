@@ -18,7 +18,7 @@ int main()
         guiDestroy();
     }else{
         // A fallback for GUI init errors
-        beginInputLoop();
+        cliBeginInputLoop();
     }
 
     destroyBoard();
