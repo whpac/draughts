@@ -232,6 +232,7 @@ int guiAttemptMoveFromSelectedToCursor(){
     return result;
 }
 
+/** Performs some after-move checks */
 void guiAfterMove(){
     int white_pawns = countPawnsOfColor(white);
     int black_pawns = countPawnsOfColor(black);
@@ -239,6 +240,10 @@ void guiAfterMove(){
     if(white_pawns == 0 || black_pawns == 0){
         char* message = white_pawns == 0 ? "WHITE lost their last pawn." : "BLACK lost their last pawn.";
 
+        displayMessage("GAME OVER", message);
+        currentState = gameOver;
+    }else if(listGetLength(allowedMoves) == 0){
+        char* message = getNextMoveColor() == white ? "WHITE cannot move." : "BLACK cannot move.";
         displayMessage("GAME OVER", message);
         currentState = gameOver;
     }
