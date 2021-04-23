@@ -1,8 +1,23 @@
 #include<stddef.h>
+#include "../../data/stack.h"
 #include "message.h"
 
-char* messageTitle;
-char* messageContent;
+Stack* titles = NULL;
+Stack* contents = NULL;
+
+/** Initializes the message controller */
+void messageInit(){
+    titles = stackCreate();
+    contents = stackCreate();
+}
+
+/** Deinitializes the message controller */
+void messageDeinit(){
+    stackDestroy(titles);
+    stackDestroy(contents);
+
+    titles = contents = NULL;
+}
 
 /**
  * Displays a message on screen
@@ -10,27 +25,31 @@ char* messageContent;
  * @param content The message content
  */
 void displayMessage(char* title, char* content){
-    messageTitle = title;
-    messageContent = content;
+    if(titles == NULL || contents == NULL) return;
+
+    stackPush(titles, title);
+    stackPush(contents, content);
 }
 
 /** Hides the currently displayed message */
 void hideMessage(){
-    messageTitle = NULL;
-    messageContent = NULL;
+    if(titles == NULL || contents == NULL) return;
+
+    stackPop(titles);
+    stackPop(contents);
 }
 
 /** Checks whether there is a message to show */
 char isMessageShown(){
-    return (messageTitle != NULL) && (messageContent != NULL);
+    return !stackIsEmpty(titles) && !stackIsEmpty(contents);
 }
 
 /** Returns the message title */
 char* getMessageTitle(){
-    return messageTitle;
+    return stackPeek(titles);
 }
 
 /** Returns the message content */
 char* getMessageContent(){
-    return messageContent;
+    return stackPeek(contents);
 }

@@ -35,6 +35,8 @@ void guiInitController(){
     currentState = waitingForSource;
     cursorStack = stackCreate();
 
+    messageInit();
+
     guiReloadBoard();
     guiLoadAllowedMovesCache(0);
 }
@@ -43,6 +45,8 @@ void guiInitController(){
 void guiDeinitController(){
     free(boardBuffer);
     guiDestroyAllowedMovesCache();
+
+    messageDeinit();
 
     while(!stackIsEmpty(cursorStack)){
         Position* pos = stackPop(cursorStack);
