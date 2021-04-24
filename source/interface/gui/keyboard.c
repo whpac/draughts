@@ -1,17 +1,19 @@
 #include<allegro5/allegro5.h>
+#include "../../log/logger.h"
 #include "display.h"
 #include "controller.h"
 #include "keyboard.h"
 #include "message.h"
 
 void processKeyPress(int keycode);
+void redirectKeyToMessage(ALLEGRO_KEYBOARD_EVENT kbd);
 
 /** Begins the keyboard input loop */
 void guiBeginInputLoop(){
     guiPaintBoard();
 
     ALLEGRO_EVENT event;
-    char exit_message_shown = 0;
+    enum { no_exit, prompt, file_prompt } exit_status = no_exit;
     al_start_timer(guiGetTimer());
     while(1)
     {
@@ -26,19 +28,29 @@ void guiBeginInputLoop(){
                 break;
 
             case ALLEGRO_EVENT_KEY_CHAR:
-                if(exit_message_shown){
-                    if(event.keyboard.keycode == ALLEGRO_KEY_DELETE){
-                        done = true;
-                    }else{
+                if(isMessageShown()){
+                    if(event.keyboard.keycode == ALLEGRO_KEY_ESCAPE){
                         hideMessage();
-                        exit_message_shown = 0;
+                        exit_status = no_exit;
+                    }else if(event.keyboard.keycode == ALLEGRO_KEY_ENTER && exit_status == prompt){
+                        hideMessage();
+                        exit_status = file_prompt;
+                        displayMessage("SAVE LOG", "Leave empty to discard log", editable_file_filter);
+                    }else if(event.keyboard.keycode == ALLEGRO_KEY_ENTER && exit_status == file_prompt){
+                        if(!isPlaceholderVisible()) setLogFileName(getMessageContent());
+                        else setLogFileName("");
+
+                        hideMessage();
+                        done = 1;
+                    }else{
+                        redirectKeyToMessage(event.keyboard);
                     }
                 }else{
                     processKeyPress(event.keyboard.keycode);
 
                     if(event.keyboard.keycode == ALLEGRO_KEY_ESCAPE){
-                        displayMessage("QUIT?", "Press DELETE to exit.", 0);
-                        exit_message_shown = 1;
+                        displayMessage("QUIT?", "Press ENTER to exit.", non_editable);
+                        exit_status = prompt;
                     }
                 }
                 break;
@@ -77,4 +89,12 @@ void processKeyPress(int keycode){
 
     if(keycode == ALLEGRO_KEY_U)
         guiAttemptUndo();
+}
+
+/**
+ * Redirects a keypress to the message dialog
+ * @param kbd The keyboard event
+ */
+void redirectKeyToMessage(ALLEGRO_KEYBOARD_EVENT kbd){
+    appendCharToUserText((char)kbd.unichar);
 }
