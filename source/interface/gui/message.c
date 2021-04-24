@@ -9,7 +9,7 @@ typedef struct Message Message;
 struct Message {
     char* title;
     char* content;
-    char isEditable;
+    MessageEditable isEditable;
     char* userText;
 };
 
@@ -33,7 +33,7 @@ void messageDeinit(){
 Message* messageCreate(){
     Message* m = malloc(sizeof(Message));
     m->title = m->content = "";
-    m->isEditable = 0;
+    m->isEditable = non_editable;
     m->userText = NULL;
     return m;
 }
@@ -53,7 +53,7 @@ void messageDestroy(Message* msg){
  * @param content The message content
  * @param is_editable Whether the content is editable
  */
-void displayMessage(char* title, char* content, char is_editable){
+void displayMessage(char* title, char* content, MessageEditable is_editable){
     if(messages == NULL) return;
 
     Message* msg = messageCreate();
@@ -110,6 +110,14 @@ char isPlaceholderVisible(){
 void appendCharToUserText(char c){
     Message* m = stackPeek(messages);
     if(m->userText == NULL) return;
+
+    if(m->isEditable == editable_file_filter){
+        char forbidden[] = { '<', '>', '/', '\\', '|', ':', '*', '?', '"' };
+        for(int i = 0; i < (sizeof(forbidden) / sizeof(forbidden[0])); i++){
+            if(c == forbidden[i]) return;
+        }
+        if(m->userText[0] == '\0' && c == ' ') return;
+    }
 
     for(int i = 0; i < USER_TEXT_LENGTH; i++){
         if(m->userText[i] == '\0' && c != '\b'){
