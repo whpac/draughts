@@ -72,6 +72,7 @@ void displayMessage(char* title, char* content, char is_editable){
 /** Hides the currently displayed message */
 void hideMessage(){
     if(messages == NULL) return;
+    if(!isMessageShown()) return;
 
     messageDestroy(stackPop(messages));
 }
