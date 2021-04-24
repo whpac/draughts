@@ -108,6 +108,8 @@ char isPlaceholderVisible(){
  */
 void appendCharToUserText(char c){
     Message* m = stackPeek(messages);
+    if(m->userText == NULL) return;
+
     for(int i = 0; i < USER_TEXT_LENGTH; i++){
         if(m->userText[i] == '\0' && c != '\b'){
             m->userText[i] = c;
