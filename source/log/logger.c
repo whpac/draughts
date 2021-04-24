@@ -46,6 +46,18 @@ void logUndo(){
 }
 
 /**
+ * Logs a game over situation
+ * @param winner The winner
+ */
+void logGameOver(PawnColor winner){
+    LogAction* la = logActionCreate();
+    la->actionType = over;
+    la->player = winner;
+
+    writeToLog(la);
+}
+
+/**
  * Logs an action
  * @param action An action to log
  */
@@ -56,7 +68,7 @@ void writeToLog(LogAction* action){
 /** Saves the log to a file */
 void saveLog(){
     FILE* f = fopen("log.txt", "w");
-    fputs(":: DRAUGHTS log ::", f);
+    fputs(":: DRAUGHTS log ::\n", f);
 
     while(!queueIsEmpty(logMessages)){
         LogAction* action = queuePop(logMessages);
@@ -69,7 +81,10 @@ void saveLog(){
                 );
                 break;
             case undo:
-                fprintf(f, "UNDO\n");
+                fputs("UNDO\n", f);
+                break;
+            case over:
+                fprintf(f, "OVER %s has won\n", action->player == white ? "WHITE" : "BLACK");
                 break;
         }
         logActionDestroy(action);

@@ -4,7 +4,7 @@
 #include "../board/pawn.h"
 
 typedef enum LogActionType LogActionType;
-enum LogActionType { unknown, move, undo };
+enum LogActionType { unknown, move, undo, over };
 
 typedef struct LogAction LogAction;
 struct LogAction {

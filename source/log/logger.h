@@ -8,6 +8,7 @@ void logDeinit();
 
 void logMove(int rfrom, int cfrom, int rto, int cto, PawnColor player);
 void logUndo();
+void logGameOver(PawnColor winner);
 
 void saveLog();
 
