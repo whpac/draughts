@@ -244,13 +244,13 @@ void guiAfterMove(){
 
     if(white_pawns == 0 || black_pawns == 0){
         char* message = white_pawns == 0 ? "WHITE lost their last pawn." : "BLACK lost their last pawn.";
-        displayMessage("GAME OVER", message, 0);
+        displayMessage("GAME OVER", message, non_editable);
 
         logGameOver(white_pawns == 0 ? black : white);
         currentState = gameOver;
     }else if(listGetLength(allowedMoves) == 0){
         char* message = getNextMoveColor() == white ? "WHITE cannot move." : "BLACK cannot move.";
-        displayMessage("GAME OVER", message, 0);
+        displayMessage("GAME OVER", message, non_editable);
 
         logGameOver(getNextMoveColor() == white ? black : white);
         currentState = gameOver;
