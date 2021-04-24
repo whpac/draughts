@@ -178,6 +178,7 @@ void paintStatus(){
     float status_bar_y = getBoardSize() * FIELD_WIDTH + 4;
     float window_width = getBoardSize() * FIELD_WIDTH;
     char over = isGameOver();
+    char msg_shown = isMessageShown();
     char str_buffer[3];
 
     int white_pawns = countPawnsOfColor(white);
@@ -199,13 +200,13 @@ void paintStatus(){
     if(!over) al_draw_text(font, DARK_WHITE_TEXT, window_width / 2, status_bar_y, ALLEGRO_ALIGN_CENTER, move_indicator);
 
     char* arrows = "ARROWS: move";
-    char* esc = "ESC: exit";
+    char* esc = msg_shown ? "ESC: cancel" : "ESC: exit";
     char* enter = "ENTER: select";
     char* undo = "U: undo";
-    al_draw_text(font, over ? DARK_GRAY_TEXT : DARK_WHITE_TEXT, 0.5 * CHAR_WIDTH, status_bar_y + CHAR_WIDTH + 4, ALLEGRO_ALIGN_LEFT, arrows);
+    al_draw_text(font, (over || msg_shown) ? DARK_GRAY_TEXT : DARK_WHITE_TEXT, 0.5 * CHAR_WIDTH, status_bar_y + CHAR_WIDTH + 4, ALLEGRO_ALIGN_LEFT, arrows);
     al_draw_text(font, DARK_WHITE_TEXT, window_width - 0.5 * CHAR_WIDTH, status_bar_y + CHAR_WIDTH + 4, ALLEGRO_ALIGN_RIGHT, esc);
-    al_draw_text(font, over ? DARK_GRAY_TEXT : DARK_WHITE_TEXT, 0.5 * CHAR_WIDTH, status_bar_y + 2*CHAR_WIDTH + 8, ALLEGRO_ALIGN_LEFT, enter);
-    al_draw_text(font, DARK_WHITE_TEXT, window_width - 0.5 * CHAR_WIDTH, status_bar_y + 2*CHAR_WIDTH + 8, ALLEGRO_ALIGN_RIGHT, undo);
+    al_draw_text(font, (over || msg_shown) ? DARK_GRAY_TEXT : DARK_WHITE_TEXT, 0.5 * CHAR_WIDTH, status_bar_y + 2*CHAR_WIDTH + 8, ALLEGRO_ALIGN_LEFT, enter);
+    al_draw_text(font, msg_shown ? DARK_GRAY_TEXT : DARK_WHITE_TEXT, window_width - 0.5 * CHAR_WIDTH, status_bar_y + 2*CHAR_WIDTH + 8, ALLEGRO_ALIGN_RIGHT, undo);
 }
 
 /**
