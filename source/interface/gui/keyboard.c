@@ -37,7 +37,7 @@ void guiBeginInputLoop(){
                     processKeyPress(event.keyboard.keycode);
 
                     if(event.keyboard.keycode == ALLEGRO_KEY_ESCAPE){
-                        displayMessage("QUIT?", "Press DELETE to exit.");
+                        displayMessage("QUIT?", "Press DELETE to exit.", 0);
                         exit_message_shown = 1;
                     }
                 }
