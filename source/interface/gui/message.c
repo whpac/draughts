@@ -1,22 +1,41 @@
 #include<stddef.h>
+#include<malloc.h>
 #include "../../data/stack.h"
 #include "message.h"
 
-Stack* titles = NULL;
-Stack* contents = NULL;
+typedef struct Message Message;
+struct Message {
+    char* title;
+    char* content;
+};
+
+Message* messageCreate();
+void messageDestroy(Message* msg);
+
+Stack* messages = NULL;
 
 /** Initializes the message controller */
 void messageInit(){
-    titles = stackCreate();
-    contents = stackCreate();
+    messages = stackCreate();
 }
 
 /** Deinitializes the message controller */
 void messageDeinit(){
-    stackDestroy(titles);
-    stackDestroy(contents);
+    stackDestroy(messages);
+    messages = NULL;
+}
 
-    titles = contents = NULL;
+/** Allocates a memory for a new message instance */
+Message* messageCreate(){
+    return malloc(sizeof(Message));
+}
+
+/**
+ * Destroys the message
+ * @param msg The message to destroy
+ */
+void messageDestroy(Message* msg){
+    free(msg);
 }
 
 /**
@@ -25,31 +44,35 @@ void messageDeinit(){
  * @param content The message content
  */
 void displayMessage(char* title, char* content){
-    if(titles == NULL || contents == NULL) return;
+    if(messages == NULL) return;
 
-    stackPush(titles, title);
-    stackPush(contents, content);
+    Message* msg = messageCreate();
+    msg->title = title;
+    msg->content = content;
+
+    stackPush(messages, msg);
 }
 
 /** Hides the currently displayed message */
 void hideMessage(){
-    if(titles == NULL || contents == NULL) return;
+    if(messages == NULL) return;
 
-    stackPop(titles);
-    stackPop(contents);
+    messageDestroy(stackPop(messages));
 }
 
 /** Checks whether there is a message to show */
 char isMessageShown(){
-    return !stackIsEmpty(titles) && !stackIsEmpty(contents);
+    return !stackIsEmpty(messages);
 }
 
 /** Returns the message title */
 char* getMessageTitle(){
-    return stackPeek(titles);
+    Message* m = stackPeek(messages);
+    return m->title;
 }
 
 /** Returns the message content */
 char* getMessageContent(){
-    return stackPeek(contents);
+    Message* m = stackPeek(messages);
+    return m->content;
 }
