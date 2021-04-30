@@ -2,6 +2,13 @@
 #include "display.h"
 #include "../../board/board.h"
 
+void displayHeader(){
+    printf("\033[2J\033[H");   // clear screen, place cursor ar (0,0)
+    printf("\033[0;33mDRAUGHTS\033[0m ");   // Print in orange
+    printf("by Marcin Szwarc\n");
+    printf("\033[1;30mgithub.com/whpac/draughts\033[0m\n\n\n");   // Print in gray
+}
+
 void displayBoard(){
     int size = getBoardSize();
 
