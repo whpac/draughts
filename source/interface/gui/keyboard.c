@@ -9,7 +9,7 @@ void processKeyPress(int keycode);
 char processKeyPressMessage(ALLEGRO_KEYBOARD_EVENT kbd);
 void redirectKeyToMessage(ALLEGRO_KEYBOARD_EVENT kbd);
 
-enum { game, exitPrompt, logSavePrompt } gameStatus = game;
+enum { game, exitPrompt, logSavePrompt, logLoadPrompt } gameStatus = game;
 
 /** Begins the keyboard input loop */
 void guiBeginInputLoop(){
@@ -85,7 +85,9 @@ char processKeyPressMessage(ALLEGRO_KEYBOARD_EVENT kbd){
             guiHideWelcome();
         }
         if(kbd.keycode == ALLEGRO_KEY_L){
-            // Load log
+            guiHideWelcome();
+            displayMessage("LOAD FILE", "Type file name here", MESSAGE_EDITABLE | MESSAGE_FILE_FILTER);
+            gameStatus = logLoadPrompt;
         }
         return 0;
     }
@@ -105,6 +107,9 @@ char processKeyPressMessage(ALLEGRO_KEYBOARD_EVENT kbd){
 
         hideMessage();
         return 1;
+
+    }else if(kbd.keycode == ALLEGRO_KEY_ENTER && gameStatus == logLoadPrompt){
+        hideMessage();
 
     }else{
         redirectKeyToMessage(kbd);
