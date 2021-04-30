@@ -200,7 +200,7 @@ void paintStatus(){
     if(!over) al_draw_text(font, DARK_WHITE_TEXT, window_width / 2, status_bar_y, ALLEGRO_ALIGN_CENTER, move_indicator);
 
     char* arrows = "ARROWS: move";
-    char* esc = msg_shown ? "ESC: cancel" : "ESC: exit";
+    char* esc = msg_shown ? "ESC: close" : "ESC: exit";
     char* enter = "ENTER: select";
     char* undo = "U: undo";
     al_draw_text(font, (over || msg_shown) ? DARK_GRAY_TEXT : DARK_WHITE_TEXT, 0.5 * CHAR_WIDTH, status_bar_y + CHAR_WIDTH + 4, ALLEGRO_ALIGN_LEFT, arrows);
