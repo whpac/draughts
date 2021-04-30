@@ -1,4 +1,6 @@
 #include<stdio.h>
+#include<string.h>
+#include "../board/board.h"
 #include "../data/queue.h"
 #include "log_action.h"
 #include "logger.h"
@@ -9,12 +11,12 @@ void writeToLog(LogAction* action);
 void clearLogQueue();
 
 Queue* logMessages;
-char outputFile[FILE_NAME_LENGTH + 1];
+char logFile[FILE_NAME_LENGTH + 1];
 
 /** Initializes a log */
 void logInit(){
     logMessages = queueCreate();
-    for(int i = 0; i <= FILE_NAME_LENGTH; i++) outputFile[i] = '\0';
+    for(int i = 0; i <= FILE_NAME_LENGTH; i++) logFile[i] = '\0';
 }
 
 /** Deinitializes a log */
@@ -75,24 +77,25 @@ void writeToLog(LogAction* action){
  * @param name The file name
  */
 void setLogFileName(char* name){
+    for(int i = 0; i <= FILE_NAME_LENGTH; i++) logFile[i] = '\0';
     for(int i = 0; i < FILE_NAME_LENGTH; i++){
-        outputFile[i] = name[i];
+        logFile[i] = name[i];
         if(name[i] == '\0') break;
     }
 }
 
 /** Saves the log to a file */
 void saveLog(){
-    if(outputFile[0] == '\0'){
+    if(logFile[0] == '\0'){
         // Clear log without saving
         clearLogQueue();
         return;
     }
 
-    FILE* f = fopen(outputFile, "w");
+    FILE* f = fopen(logFile, "w");
 
     if(f == NULL){
-        printf("Unable to open the log file '%s'\n", outputFile);
+        printf("Unable to open the log file '%s'\n", logFile);
         clearLogQueue();
         return;
     }
@@ -110,7 +113,7 @@ void saveLog(){
                 );
                 break;
             case undo:
-                fputs("UNDO\n", f);
+                fputs("UNDO MOVE\n", f);
                 break;
             case over:
                 fprintf(f, "OVER %s has won\n", action->player == white ? "WHITE" : "BLACK");
@@ -128,4 +131,65 @@ void clearLogQueue(){
     while(!queueIsEmpty(logMessages)){
         logActionDestroy(queuePop(logMessages));
     }
+}
+
+/**
+ * Reads a log file
+ * @param move A function to call in order to move a pawn
+ * @param undo A function to call in order to undo a move
+ */
+void readLog(MoveFunction move, UndoFunction undo){
+    if(logFile[0] == '\0') return;
+
+    FILE* f = fopen(logFile, "r");
+
+    if(f == NULL){
+        printf("Unable to open the file '%s'\n", logFile);
+        setLogFileName("");
+        return;
+    }
+
+    // Prevents from accidental overwriting the log
+    setLogFileName("");
+
+    char signature[] = ":: DRAUGHTS log ::\n";
+    for(int i = 0; signature[i] != '\0'; i++){
+        char c = fgetc(f);
+        if(signature[i] != c){
+            printf("The specified file is not valid\n");
+            fclose(f);
+            return;
+        }
+    }
+
+    while(!feof(f)){
+        char action[8];
+        fscanf(f, " %7s%", &action);
+
+        if(action[0] != ':'){
+            if(!strcmp(action, "MOVE")){
+                int rfrom, cfrom, rto, cto;
+                fscanf(f, " (%d, %d) -> (%d, %d)", &rfrom, &cfrom, &rto, &cto);
+
+                int res = BOARD_MOVE_NOT_OPTIMAL;
+                if(move != NULL) res = move(rfrom, cfrom, rto, cto);
+
+                if(res != BOARD_MOVE_SUCCESSFUL && res != BOARD_MOVE_NOT_FINISHED){
+                    printf("An invalid move encountered. Stopping.\n");
+                    break;
+                }
+            }else if(!strcmp(action, "UNDO")){
+                if(undo != NULL) undo();
+            }else if(!strcmp(action, "OVER")){
+                // No need to do anything
+            }else{
+                printf("Unknown action: %s. Ignoring it.\n", action);
+            }
+        }
+
+        // Read the rest of the line
+        while(fgetc(f) != '\n' && !feof(f));
+    }
+
+    fclose(f);
 }
