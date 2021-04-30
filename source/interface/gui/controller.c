@@ -26,6 +26,7 @@ void guiReloadBoard();
 void guiAfterMove();
 void guiLoadAllowedMovesCache(char only_from_cursor);
 void guiDestroyAllowedMovesCache();
+void guiMoveCursorTo(int row, int col);
 MarkerColor getCursorColor();
 void guiDeselectField(char unfreeze);
 char isValidSourceField(int row, int col);
@@ -123,8 +124,17 @@ void guiDestroyAllowedMovesCache(){
  * @param dcol The difference in column number
  */
 void guiMoveCursor(int drow, int dcol){
-    cursorRow += drow;
-    cursorCol += dcol;
+    guiMoveCursorTo(cursorRow + drow, cursorCol + dcol);
+}
+
+/**
+ * Moves the cursor to the given coordinates
+ * @param drow The row number
+ * @param dcol The column number
+ */
+void guiMoveCursorTo(int row, int col){
+    cursorRow = row;
+    cursorCol = col;
     int size = getBoardSize();
 
     if(cursorRow < 0) cursorRow = 0;
@@ -248,6 +258,20 @@ int guiAttemptMoveFromSelectedToCursor(){
     guiAfterMove();
 
     return result;
+}
+
+/**
+ * Moves a pawn from a given field to another given field
+ * @param rfrom The source row
+ * @param cfrom The source column
+ * @param rto The target row
+ * @param cto The target column
+ */
+int guiAttemptMoveFromTo(int rfrom, int cfrom, int rto, int cto){
+    guiMoveCursorTo(rfrom, cfrom);
+    guiSelectCurrentField(0);
+    guiMoveCursorTo(rto, cto);
+    return guiAttemptMoveFromSelectedToCursor();
 }
 
 /** Performs some after-move checks */

@@ -17,6 +17,7 @@ char guiIsFieldSelected();
 char guiIsCurrentFieldSelected();
 
 int guiAttemptMoveFromSelectedToCursor();
+int guiAttemptMoveFromTo(int rfrom, int cfrom, int rto, int cto);
 void guiAttemptUndo();
 
 char isGameOver();
