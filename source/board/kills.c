@@ -151,7 +151,7 @@ TreeNode* getAllowedKillsFrom(Pawn* p, int row, int col){
                 if(res != BOARD_MOVE_SUCCESSFUL && res != BOARD_MOVE_NOT_FINISHED) continue;
 
                 TreeNode* moves_subtree = getAllowedKillsFrom(p, rto, cto);
-                undoMove();                 // There is no need to undo a failed move
+                undoMoveWithoutLogging();          // There is no need to undo a failed move
 
                 // Add a tree only if it is of at least the same depth as others
                 // If the new subtree's depth is greater, remove former subtrees

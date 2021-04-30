@@ -7,11 +7,13 @@
 #include "../../data/tree.h"
 #include "../../data/list.h"
 #include "../../data/stack.h"
+#include "../../log/logger.h"
 #include "controller.h"
 #include "marker.h"
 #include "painter.h"
 #include "message.h"
 
+char welcomeShown = 1;
 int cursorRow = 0, cursorCol = 0;
 int selectedRow = -1, selectedCol = -1;
 char selectionFrozen = 0;
@@ -24,6 +26,7 @@ void guiReloadBoard();
 void guiAfterMove();
 void guiLoadAllowedMovesCache(char only_from_cursor);
 void guiDestroyAllowedMovesCache();
+void guiMoveCursorTo(int row, int col);
 MarkerColor getCursorColor();
 void guiDeselectField(char unfreeze);
 char isValidSourceField(int row, int col);
@@ -36,6 +39,7 @@ void guiInitController(){
     cursorStack = stackCreate();
 
     messageInit();
+    displayMessage("D R A U G H T S", "by Marcin Szwarc", MESSAGE_TITLE_SHADOW);
 
     guiReloadBoard();
     guiLoadAllowedMovesCache(0);
@@ -68,6 +72,17 @@ void guiReloadBoard(){
             boardBuffer[row * size + col] = getPawnAt(row, col);
         }
     }
+}
+
+/** Checks whether the welcome message is shown */
+char guiIsWelcomeShown(){
+    return welcomeShown;
+}
+
+/** Marks the welcome message as hidden */
+void guiHideWelcome(){
+    if(welcomeShown) hideMessage();
+    welcomeShown = 0;
 }
 
 /**
@@ -109,8 +124,17 @@ void guiDestroyAllowedMovesCache(){
  * @param dcol The difference in column number
  */
 void guiMoveCursor(int drow, int dcol){
-    cursorRow += drow;
-    cursorCol += dcol;
+    guiMoveCursorTo(cursorRow + drow, cursorCol + dcol);
+}
+
+/**
+ * Moves the cursor to the given coordinates
+ * @param drow The row number
+ * @param dcol The column number
+ */
+void guiMoveCursorTo(int row, int col){
+    cursorRow = row;
+    cursorCol = col;
     int size = getBoardSize();
 
     if(cursorRow < 0) cursorRow = 0;
@@ -236,6 +260,20 @@ int guiAttemptMoveFromSelectedToCursor(){
     return result;
 }
 
+/**
+ * Moves a pawn from a given field to another given field
+ * @param rfrom The source row
+ * @param cfrom The source column
+ * @param rto The target row
+ * @param cto The target column
+ */
+int guiAttemptMoveFromTo(int rfrom, int cfrom, int rto, int cto){
+    guiMoveCursorTo(rfrom, cfrom);
+    guiSelectCurrentField(0);
+    guiMoveCursorTo(rto, cto);
+    return guiAttemptMoveFromSelectedToCursor();
+}
+
 /** Performs some after-move checks */
 void guiAfterMove(){
     int white_pawns = countPawnsOfColor(white);
@@ -243,12 +281,15 @@ void guiAfterMove(){
 
     if(white_pawns == 0 || black_pawns == 0){
         char* message = white_pawns == 0 ? "WHITE lost their last pawn." : "BLACK lost their last pawn.";
+        displayMessage("GAME OVER", message, MESSAGE_NORMAL);
 
-        displayMessage("GAME OVER", message);
+        logGameOver(white_pawns == 0 ? black : white);
         currentState = gameOver;
     }else if(listGetLength(allowedMoves) == 0){
         char* message = getNextMoveColor() == white ? "WHITE cannot move." : "BLACK cannot move.";
-        displayMessage("GAME OVER", message);
+        displayMessage("GAME OVER", message, MESSAGE_NORMAL);
+
+        logGameOver(getNextMoveColor() == white ? black : white);
         currentState = gameOver;
     }
 }

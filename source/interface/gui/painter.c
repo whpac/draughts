@@ -23,11 +23,14 @@
 #define CURSOR_GRAY_COLOR al_map_rgb(172, 172, 172)
 #define FRAME_CURSOR_THICKNESS 2.0
 #define POINT_CURSOR_RADIUS 3.0
+#define SHADOW_TEXT al_map_rgb(32, 0, 0)
 #define DARK_GRAY_TEXT al_map_rgb(96, 96, 96)
 #define DARK_WHITE_TEXT al_map_rgb(192, 192, 192)
 #define LIGHT_WHITE_TEXT al_map_rgb(255, 255, 255)
+#define MESSAGE_PLACEHOLDER_TEXT al_map_rgb(228, 160, 160)
 #define MESSAGE_BACKGROUND al_map_rgb(96, 0, 0)
 #define CHAR_WIDTH 8.0
+#define SHADOW_OFFSET 2.0
 
 void paintField(int row, int col);
 void paintPawn(Pawn* p, int row, int col);
@@ -56,7 +59,7 @@ void paintBoard(Pawn** buffer, int board_size){
         }
     }
 
-    if(!isGameOver()){
+    if(!isGameOver() && !guiIsWelcomeShown()){
         List* markers = guiGetMarkers();
         while(listGetLength(markers) > 0){
             Marker* marker = listGet(markers, 0);
@@ -177,6 +180,7 @@ void paintStatus(){
     float status_bar_y = getBoardSize() * FIELD_WIDTH + 4;
     float window_width = getBoardSize() * FIELD_WIDTH;
     char over = isGameOver();
+    char msg_shown = isMessageShown();
     char str_buffer[3];
 
     int white_pawns = countPawnsOfColor(white);
@@ -195,16 +199,25 @@ void paintStatus(){
     char* move_indicator = "<MOVE ";
     if(getNextMoveColor() == black) move_indicator = " MOVE>";
 
-    if(!over) al_draw_text(font, DARK_WHITE_TEXT, window_width / 2, status_bar_y, ALLEGRO_ALIGN_CENTER, move_indicator);
+    if(!guiIsWelcomeShown()){
+        if(!over) al_draw_text(font, DARK_WHITE_TEXT, window_width / 2, status_bar_y, ALLEGRO_ALIGN_CENTER, move_indicator);
 
-    char* arrows = "ARROWS: move";
-    char* esc = "ESC: exit";
-    char* enter = "ENTER: select";
-    char* undo = "U: undo";
-    al_draw_text(font, over ? DARK_GRAY_TEXT : DARK_WHITE_TEXT, 0.5 * CHAR_WIDTH, status_bar_y + CHAR_WIDTH + 4, ALLEGRO_ALIGN_LEFT, arrows);
-    al_draw_text(font, DARK_WHITE_TEXT, window_width - 0.5 * CHAR_WIDTH, status_bar_y + CHAR_WIDTH + 4, ALLEGRO_ALIGN_RIGHT, esc);
-    al_draw_text(font, over ? DARK_GRAY_TEXT : DARK_WHITE_TEXT, 0.5 * CHAR_WIDTH, status_bar_y + 2*CHAR_WIDTH + 8, ALLEGRO_ALIGN_LEFT, enter);
-    al_draw_text(font, DARK_WHITE_TEXT, window_width - 0.5 * CHAR_WIDTH, status_bar_y + 2*CHAR_WIDTH + 8, ALLEGRO_ALIGN_RIGHT, undo);
+        char* arrows = "ARROWS: move";
+        char* esc = msg_shown ? "ESC: close" : "ESC: exit";
+        char* enter = "ENTER: select";
+        char* undo = "U: undo";
+        al_draw_text(font, (over || msg_shown) ? DARK_GRAY_TEXT : DARK_WHITE_TEXT, 0.5 * CHAR_WIDTH, status_bar_y + CHAR_WIDTH + 4, ALLEGRO_ALIGN_LEFT, arrows);
+        al_draw_text(font, DARK_WHITE_TEXT, window_width - 0.5 * CHAR_WIDTH, status_bar_y + CHAR_WIDTH + 4, ALLEGRO_ALIGN_RIGHT, esc);
+        al_draw_text(font, (over || msg_shown) ? DARK_GRAY_TEXT : DARK_WHITE_TEXT, 0.5 * CHAR_WIDTH, status_bar_y + 2*CHAR_WIDTH + 8, ALLEGRO_ALIGN_LEFT, enter);
+        al_draw_text(font, msg_shown ? DARK_GRAY_TEXT : DARK_WHITE_TEXT, window_width - 0.5 * CHAR_WIDTH, status_bar_y + 2*CHAR_WIDTH + 8, ALLEGRO_ALIGN_RIGHT, undo);
+    }else{
+        char* new_game = "N: new game";
+        char* load_log = "L: load saved";
+        char* github = "github.com/whpac/draughts";
+        al_draw_text(font, DARK_WHITE_TEXT, 0.5 * CHAR_WIDTH, status_bar_y + CHAR_WIDTH + 4, ALLEGRO_ALIGN_LEFT, new_game);
+        al_draw_text(font, DARK_WHITE_TEXT, window_width - 0.5 * CHAR_WIDTH, status_bar_y + CHAR_WIDTH + 4, ALLEGRO_ALIGN_RIGHT, load_log);
+        al_draw_text(font, DARK_GRAY_TEXT, window_width / 2, status_bar_y + 2*CHAR_WIDTH + 8, ALLEGRO_ALIGN_CENTER, github);
+    }
 }
 
 /**
@@ -222,6 +235,22 @@ void paintMessage(){
         MESSAGE_BACKGROUND
     );
 
-    al_draw_text(font, LIGHT_WHITE_TEXT, board_length / 2, (board_length - stripe_height) / 2 + CHAR_WIDTH, ALLEGRO_ALIGN_CENTER, getMessageTitle());
-    al_draw_text(font, LIGHT_WHITE_TEXT, board_length / 2, (board_length - stripe_height) / 2 + CHAR_WIDTH * 3, ALLEGRO_ALIGN_CENTER, getMessageContent());
+    if(getMessageFlags() & MESSAGE_TITLE_SHADOW){
+        al_draw_text(
+            font, SHADOW_TEXT,
+            board_length / 2 + SHADOW_OFFSET, (board_length - stripe_height) / 2 + CHAR_WIDTH + SHADOW_OFFSET,
+            ALLEGRO_ALIGN_CENTER, getMessageTitle()
+        );
+    }
+    al_draw_text(
+        font, LIGHT_WHITE_TEXT,
+        board_length / 2, (board_length - stripe_height) / 2 + CHAR_WIDTH,
+        ALLEGRO_ALIGN_CENTER, getMessageTitle()
+    );
+
+    al_draw_text(
+        font, isPlaceholderVisible() ? MESSAGE_PLACEHOLDER_TEXT : LIGHT_WHITE_TEXT,
+        board_length / 2, (board_length - stripe_height) / 2 + CHAR_WIDTH * 3,
+        ALLEGRO_ALIGN_CENTER, getMessageContent()
+    );
 }
