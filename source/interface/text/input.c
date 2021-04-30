@@ -18,9 +18,11 @@ void cliBeginInputLoop(){
     displayHeader();
 
     printf("Do you want to load a saved game? (y/N): ");
+    printf("\033[1;30mN\033[0m\033[1D");    // Prints a gray N and goes back by one letter
 
     char c;
-    scanf(" %c", &c);
+    scanf("%c", &c);
+    if(c != '\n') while(getchar() != '\n');
 
     if(c == 'y' || c == 'Y'){
         printf("\033[1A\033[2K");   // Clear last line
@@ -37,7 +39,8 @@ void cliBeginInputLoop(){
     while(doInputIteration());
 
     printf("\nDo you want to save this game? (y/N): ");
-    scanf(" %c", &c);
+    printf("\033[1;30mN\033[0m\033[1D");    // Prints a gray N and goes back by one letter
+    scanf("%c", &c);
 
     if(c == 'y' || c == 'Y'){
         printf("\033[1A\033[2K");   // Clear last line
@@ -73,7 +76,10 @@ char doInputIteration(){
         printf("Type command ('%c' for help): ", help_char);
         scanf(" %c", &cmd);
 
-        if(cmd == 'q') return 0;
+        if(cmd == 'q'){
+            while(getchar() != '\n');  // Removes any newlines from the buffer
+            return 0;
+        }
         process_res = processCommand(cmd, &getIntArg);
     }while(process_res != CMD_PROC_SUCCESSFUL || cmd == help_char);
 
