@@ -1,6 +1,7 @@
 #include<stdio.h>
 #include "cmd_processor.h"
 #include "../../board/board.h"
+#include "display.h"
 
 void printHelp();
 int movePawn(int rfrom, int cfrom, int rto, int cto);
@@ -37,13 +38,17 @@ int processCommand(char cmd, int (*int_getter)()){
 
 /** Prints the help message */
 void printHelp(){
+    displayHeader();
     printf("DRAUGHTS commands help\n");
     printf("  %c\n    invokes help\n", getHelpChar());
-    printf("  m (row_from) (col_from) (row_to) (col_to)\n");
+    printf("  m \033[3mrow_from col_from row_to col_to\033[0m\n");
     printf("    moves pawn from given coordinates to those given by the second pair\n");
     printf("  %c\n    quits the game\n", getQuitChar());
     printf("  u\n    undoes the last move\n");
-    printf("\n");
+    printf("\n\n");
+
+    printf("Press Enter to close");
+    while(getchar() != '\n');
 }
 
 /**

@@ -4,6 +4,7 @@
 #include "display.h"
 #include "../../board/board.h"
 #include "../../board/moves.h"
+#include "../../log/logger.h"
 
 char doInputIteration();
 void handleVictory(int white_count, int black_count);
@@ -14,7 +15,42 @@ int getIntArg();
  * Begins the input loop.
  */
 void cliBeginInputLoop(){
+    displayHeader();
+
+    printf("Do you want to load a saved game? (y/N): ");
+    printf("\033[2mN\033[0m\033[1D");    // Prints a gray N and goes back by one letter
+
+    char c;
+    scanf("%c", &c);
+    if(c != '\n') while(getchar() != '\n');
+
+    if(c == 'y' || c == 'Y'){
+        printf("\033[1A\033[2K");   // Clear last line
+        printf("Type the file path: ");
+
+        char file_name[65];
+        scanf(" %64s", &file_name);
+
+        setLogFileName(file_name);
+        readLog(attemptMovePawnAtTo, undoMove);
+    }
+    printf("\033[1A\033[2K");   // Clear last line
+
     while(doInputIteration());
+
+    printf("\nDo you want to save this game? (y/N): ");
+    printf("\033[2mN\033[0m\033[1D");    // Prints a gray N and goes back by one letter
+    scanf("%c", &c);
+
+    if(c == 'y' || c == 'Y'){
+        printf("\033[1A\033[2K");   // Clear last line
+        printf("Type the target file path: ");
+
+        char file_name[65];
+        scanf(" %64s", &file_name);
+
+        setLogFileName(file_name);
+    }
 }
 
 /**
@@ -22,7 +58,7 @@ void cliBeginInputLoop(){
  * Returns 0 if user requested to exit. Else, returns 1.
  */
 char doInputIteration(){
-    printf("Current board:\n");
+    displayHeader();
     displayBoard();
 
     int white_cnt = countPawnsOfColor(white);
@@ -38,11 +74,14 @@ char doInputIteration(){
     do{
         handleError(process_res);
         printf("Type command ('%c' for help): ", help_char);
-        scanf(" %c", &cmd);
+        scanf("%c", &cmd);
+        while(getchar() != '\n');  // Removes any newlines from the buffer
 
-        if(cmd == 'q') return 0;
+        if(cmd == 'q'){
+            return 0;
+        }
         process_res = processCommand(cmd, &getIntArg);
-    }while(process_res != CMD_PROC_SUCCESSFUL || cmd == help_char);
+    }while(process_res != CMD_PROC_SUCCESSFUL);
 
     return 1;
 }
@@ -66,6 +105,7 @@ void handleVictory(int white_count, int black_count){
  * @param err_code The error code
  */
 void handleError(int err_code){
+    printf("\033[1;31m");   // Print error in red
     switch(err_code){
         case CMD_PROC_SUCCESSFUL:
             break;
@@ -112,6 +152,7 @@ void handleError(int err_code){
             printf("An unknown error occured. Code: %d\n", err_code);
             break;
     }
+    printf("\033[0m");   // Reset to default font style
 }
 
 /** Function used to read an integer argument in order to process the command */
