@@ -13,6 +13,7 @@
 #include "painter.h"
 #include "message.h"
 
+char welcomeShown = 1;
 int cursorRow = 0, cursorCol = 0;
 int selectedRow = -1, selectedCol = -1;
 char selectionFrozen = 0;
@@ -37,6 +38,7 @@ void guiInitController(){
     cursorStack = stackCreate();
 
     messageInit();
+    displayMessage("D R A U G H T S", "by Marcin Szwarc", MESSAGE_TITLE_SHADOW);
 
     guiReloadBoard();
     guiLoadAllowedMovesCache(0);
@@ -69,6 +71,15 @@ void guiReloadBoard(){
             boardBuffer[row * size + col] = getPawnAt(row, col);
         }
     }
+}
+
+char guiIsWelcomeShown(){
+    return welcomeShown;
+}
+
+void guiHideWelcome(){
+    if(welcomeShown) hideMessage();
+    welcomeShown = 0;
 }
 
 /**

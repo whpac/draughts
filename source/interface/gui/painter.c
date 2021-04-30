@@ -59,7 +59,7 @@ void paintBoard(Pawn** buffer, int board_size){
         }
     }
 
-    if(!isGameOver()){
+    if(!isGameOver() && !guiIsWelcomeShown()){
         List* markers = guiGetMarkers();
         while(listGetLength(markers) > 0){
             Marker* marker = listGet(markers, 0);
@@ -199,16 +199,25 @@ void paintStatus(){
     char* move_indicator = "<MOVE ";
     if(getNextMoveColor() == black) move_indicator = " MOVE>";
 
-    if(!over) al_draw_text(font, DARK_WHITE_TEXT, window_width / 2, status_bar_y, ALLEGRO_ALIGN_CENTER, move_indicator);
+    if(!guiIsWelcomeShown()){
+        if(!over) al_draw_text(font, DARK_WHITE_TEXT, window_width / 2, status_bar_y, ALLEGRO_ALIGN_CENTER, move_indicator);
 
-    char* arrows = "ARROWS: move";
-    char* esc = msg_shown ? "ESC: close" : "ESC: exit";
-    char* enter = "ENTER: select";
-    char* undo = "U: undo";
-    al_draw_text(font, (over || msg_shown) ? DARK_GRAY_TEXT : DARK_WHITE_TEXT, 0.5 * CHAR_WIDTH, status_bar_y + CHAR_WIDTH + 4, ALLEGRO_ALIGN_LEFT, arrows);
-    al_draw_text(font, DARK_WHITE_TEXT, window_width - 0.5 * CHAR_WIDTH, status_bar_y + CHAR_WIDTH + 4, ALLEGRO_ALIGN_RIGHT, esc);
-    al_draw_text(font, (over || msg_shown) ? DARK_GRAY_TEXT : DARK_WHITE_TEXT, 0.5 * CHAR_WIDTH, status_bar_y + 2*CHAR_WIDTH + 8, ALLEGRO_ALIGN_LEFT, enter);
-    al_draw_text(font, msg_shown ? DARK_GRAY_TEXT : DARK_WHITE_TEXT, window_width - 0.5 * CHAR_WIDTH, status_bar_y + 2*CHAR_WIDTH + 8, ALLEGRO_ALIGN_RIGHT, undo);
+        char* arrows = "ARROWS: move";
+        char* esc = msg_shown ? "ESC: close" : "ESC: exit";
+        char* enter = "ENTER: select";
+        char* undo = "U: undo";
+        al_draw_text(font, (over || msg_shown) ? DARK_GRAY_TEXT : DARK_WHITE_TEXT, 0.5 * CHAR_WIDTH, status_bar_y + CHAR_WIDTH + 4, ALLEGRO_ALIGN_LEFT, arrows);
+        al_draw_text(font, DARK_WHITE_TEXT, window_width - 0.5 * CHAR_WIDTH, status_bar_y + CHAR_WIDTH + 4, ALLEGRO_ALIGN_RIGHT, esc);
+        al_draw_text(font, (over || msg_shown) ? DARK_GRAY_TEXT : DARK_WHITE_TEXT, 0.5 * CHAR_WIDTH, status_bar_y + 2*CHAR_WIDTH + 8, ALLEGRO_ALIGN_LEFT, enter);
+        al_draw_text(font, msg_shown ? DARK_GRAY_TEXT : DARK_WHITE_TEXT, window_width - 0.5 * CHAR_WIDTH, status_bar_y + 2*CHAR_WIDTH + 8, ALLEGRO_ALIGN_RIGHT, undo);
+    }else{
+        char* new_game = "N: new game";
+        char* load_log = "L: load saved";
+        char* github = "github.com/whpac/draughts";
+        al_draw_text(font, DARK_WHITE_TEXT, 0.5 * CHAR_WIDTH, status_bar_y + CHAR_WIDTH + 4, ALLEGRO_ALIGN_LEFT, new_game);
+        al_draw_text(font, DARK_WHITE_TEXT, window_width - 0.5 * CHAR_WIDTH, status_bar_y + CHAR_WIDTH + 4, ALLEGRO_ALIGN_RIGHT, load_log);
+        al_draw_text(font, DARK_GRAY_TEXT, window_width / 2, status_bar_y + 2*CHAR_WIDTH + 8, ALLEGRO_ALIGN_CENTER, github);
+    }
 }
 
 /**

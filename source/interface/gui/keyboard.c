@@ -80,6 +80,16 @@ void processKeyPress(int keycode){
  * @param kbd The keyboard event
  */
 char processKeyPressMessage(ALLEGRO_KEYBOARD_EVENT kbd){
+    if(guiIsWelcomeShown()){
+        if(kbd.keycode == ALLEGRO_KEY_N){
+            guiHideWelcome();
+        }
+        if(kbd.keycode == ALLEGRO_KEY_L){
+            // Load log
+        }
+        return 0;
+    }
+
     if(kbd.keycode == ALLEGRO_KEY_ESCAPE){
         hideMessage();
         gameStatus = game;
