@@ -27,7 +27,7 @@ void displayBoard(){
 
             if(p == NULL){
                 // Game takes place on some fields only (black ones)
-                printf("%c", isPlayableField(row, col) ? '.' : ' ');
+                printf("%s", isPlayableField(row, col) ? "\033[2m.\033[0m" : " ");
                 continue;
             }
 
