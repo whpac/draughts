@@ -7,6 +7,9 @@ all: folders ${OUTPUT}
 run: all
 	./${OUTPUT}
 
+run-text: all
+	./${OUTPUT} text
+
 ${OUTPUT}: ${OBJ}
 	gcc -o $@ $^ -lallegro -lallegro_font -lallegro_primitives
 
