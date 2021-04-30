@@ -69,7 +69,7 @@ void processKeyPress(int keycode){
         guiAttemptUndo();
 
     if(keycode == ALLEGRO_KEY_ESCAPE){
-        displayMessage("QUIT?", "Press ENTER to exit.", non_editable);
+        displayMessage("QUIT?", "Press ENTER to exit.", MESSAGE_NORMAL);
         gameStatus = exitPrompt;
     }
 }
@@ -87,7 +87,7 @@ char processKeyPressMessage(ALLEGRO_KEYBOARD_EVENT kbd){
     }else if(kbd.keycode == ALLEGRO_KEY_ENTER && gameStatus == exitPrompt){
         hideMessage();
         gameStatus = logSavePrompt;
-        displayMessage("SAVE LOG", "Leave empty to discard log", editable_file_filter);
+        displayMessage("SAVE GAME", "Leave empty to discard game", MESSAGE_EDITABLE | MESSAGE_FILE_FILTER);
 
     }else if(kbd.keycode == ALLEGRO_KEY_ENTER && gameStatus == logSavePrompt){
         if(!isPlaceholderVisible()) setLogFileName(getMessageContent());

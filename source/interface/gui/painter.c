@@ -23,12 +23,14 @@
 #define CURSOR_GRAY_COLOR al_map_rgb(172, 172, 172)
 #define FRAME_CURSOR_THICKNESS 2.0
 #define POINT_CURSOR_RADIUS 3.0
+#define SHADOW_TEXT al_map_rgb(32, 0, 0)
 #define DARK_GRAY_TEXT al_map_rgb(96, 96, 96)
 #define DARK_WHITE_TEXT al_map_rgb(192, 192, 192)
 #define LIGHT_WHITE_TEXT al_map_rgb(255, 255, 255)
 #define MESSAGE_PLACEHOLDER_TEXT al_map_rgb(228, 160, 160)
 #define MESSAGE_BACKGROUND al_map_rgb(96, 0, 0)
 #define CHAR_WIDTH 8.0
+#define SHADOW_OFFSET 2.0
 
 void paintField(int row, int col);
 void paintPawn(Pawn* p, int row, int col);
@@ -224,11 +226,19 @@ void paintMessage(){
         MESSAGE_BACKGROUND
     );
 
+    if(getMessageFlags() & MESSAGE_TITLE_SHADOW){
+        al_draw_text(
+            font, SHADOW_TEXT,
+            board_length / 2 + SHADOW_OFFSET, (board_length - stripe_height) / 2 + CHAR_WIDTH + SHADOW_OFFSET,
+            ALLEGRO_ALIGN_CENTER, getMessageTitle()
+        );
+    }
     al_draw_text(
         font, LIGHT_WHITE_TEXT,
         board_length / 2, (board_length - stripe_height) / 2 + CHAR_WIDTH,
         ALLEGRO_ALIGN_CENTER, getMessageTitle()
     );
+
     al_draw_text(
         font, isPlaceholderVisible() ? MESSAGE_PLACEHOLDER_TEXT : LIGHT_WHITE_TEXT,
         board_length / 2, (board_length - stripe_height) / 2 + CHAR_WIDTH * 3,
