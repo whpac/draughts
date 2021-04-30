@@ -73,10 +73,12 @@ void guiReloadBoard(){
     }
 }
 
+/** Checks whether the welcome message is shown */
 char guiIsWelcomeShown(){
     return welcomeShown;
 }
 
+/** Marks the welcome message as hidden */
 void guiHideWelcome(){
     if(welcomeShown) hideMessage();
     welcomeShown = 0;
