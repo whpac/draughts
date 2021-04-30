@@ -4,6 +4,7 @@
 #include "display.h"
 #include "../../board/board.h"
 #include "../../board/moves.h"
+#include "../../log/logger.h"
 
 char doInputIteration();
 void handleVictory(int white_count, int black_count);
@@ -14,7 +15,39 @@ int getIntArg();
  * Begins the input loop.
  */
 void cliBeginInputLoop(){
+    displayHeader();
+
+    printf("Do you want to load a saved game? (y/N): ");
+
+    char c;
+    scanf(" %c", &c);
+
+    if(c == 'y' || c == 'Y'){
+        printf("\033[1A\033[2K");   // Clear last line
+        printf("Type the file path: ");
+
+        char file_name[65];
+        scanf(" %64s", &file_name);
+
+        setLogFileName(file_name);
+        readLog(attemptMovePawnAtTo, undoMove);
+    }
+    printf("\033[1A\033[2K");   // Clear last line
+
     while(doInputIteration());
+
+    printf("\nDo you want to save this game? (y/N): ");
+    scanf(" %c", &c);
+
+    if(c == 'y' || c == 'Y'){
+        printf("\033[1A\033[2K");   // Clear last line
+        printf("Type the target file path: ");
+
+        char file_name[65];
+        scanf(" %64s", &file_name);
+
+        setLogFileName(file_name);
+    }
 }
 
 /**
@@ -22,7 +55,7 @@ void cliBeginInputLoop(){
  * Returns 0 if user requested to exit. Else, returns 1.
  */
 char doInputIteration(){
-    printf("Current board:\n");
+    displayHeader();
     displayBoard();
 
     int white_cnt = countPawnsOfColor(white);
@@ -66,6 +99,7 @@ void handleVictory(int white_count, int black_count){
  * @param err_code The error code
  */
 void handleError(int err_code){
+    printf("\033[1;31m");   // Print error in red
     switch(err_code){
         case CMD_PROC_SUCCESSFUL:
             break;
@@ -112,6 +146,7 @@ void handleError(int err_code){
             printf("An unknown error occured. Code: %d\n", err_code);
             break;
     }
+    printf("\033[0m");   // Reset to default font style
 }
 
 /** Function used to read an integer argument in order to process the command */
