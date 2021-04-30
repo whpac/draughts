@@ -18,7 +18,7 @@ void cliBeginInputLoop(){
     displayHeader();
 
     printf("Do you want to load a saved game? (y/N): ");
-    printf("\033[1;30mN\033[0m\033[1D");    // Prints a gray N and goes back by one letter
+    printf("\033[2mN\033[0m\033[1D");    // Prints a gray N and goes back by one letter
 
     char c;
     scanf("%c", &c);
@@ -39,7 +39,7 @@ void cliBeginInputLoop(){
     while(doInputIteration());
 
     printf("\nDo you want to save this game? (y/N): ");
-    printf("\033[1;30mN\033[0m\033[1D");    // Prints a gray N and goes back by one letter
+    printf("\033[2mN\033[0m\033[1D");    // Prints a gray N and goes back by one letter
     scanf("%c", &c);
 
     if(c == 'y' || c == 'Y'){
