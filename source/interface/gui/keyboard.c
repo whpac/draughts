@@ -109,6 +109,10 @@ char processKeyPressMessage(ALLEGRO_KEYBOARD_EVENT kbd){
         return 1;
 
     }else if(kbd.keycode == ALLEGRO_KEY_ENTER && gameStatus == logLoadPrompt){
+        if(!isPlaceholderVisible()) setLogFileName(getMessageContent());
+        else setLogFileName("");
+
+        readLog(&guiAttemptMoveFromTo, &guiAttemptUndo);
         hideMessage();
 
     }else{
