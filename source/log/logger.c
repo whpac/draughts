@@ -95,8 +95,8 @@ int saveLog(){
     FILE* f = fopen(logFile, "w");
 
     if(f == NULL){
-        printf("Unable to open the log file '%s'\n", logFile);
-        return 1;
+        // printf("Unable to open the log file '%s'\n", logFile);
+        return LOGGER_CANNOT_OPEN_FILE;
     }
 
     fputs(":: DRAUGHTS log ::\n", f);
@@ -144,9 +144,9 @@ int readLog(MoveFunction move, UndoFunction undo){
     FILE* f = fopen(logFile, "r");
 
     if(f == NULL){
-        printf("Unable to open the file '%s'\n", logFile);
+        // printf("Unable to open the file '%s'\n", logFile);
         setLogFileName("");
-        return 1;
+        return LOGGER_CANNOT_OPEN_FILE;
     }
 
     // Prevents from accidental overwriting the log
@@ -156,9 +156,9 @@ int readLog(MoveFunction move, UndoFunction undo){
     for(int i = 0; signature[i] != '\0'; i++){
         char c = fgetc(f);
         if(signature[i] != c){
-            printf("The specified file is not valid\n");
+            // printf("The specified file is not valid\n");
             fclose(f);
-            return 1;
+            return LOGGER_FILE_INVALID;
         }
     }
 

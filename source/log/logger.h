@@ -1,6 +1,9 @@
 #ifndef LOGGER_H
 #define LOGGER_H
 
+#define LOGGER_CANNOT_OPEN_FILE 1
+#define LOGGER_FILE_INVALID 2
+
 #include "../board/pawn.h"
 
 typedef int (*MoveFunction)(int rfrom, int cfrom, int rto, int cto);
