@@ -37,15 +37,17 @@ void guiBeginInputLoop(){
                 break;
 
             case ALLEGRO_EVENT_DISPLAY_CLOSE:
-                done = 1;
+                if(gameStatus == game && !isMessageShown()){
+                    processKeyPress(ALLEGRO_KEY_ESCAPE);
+                }else{
+                    done = 1;
+                }
                 break;
         }
 
         if(done)
             break;
     }
-
-    saveLog();
 }
 
 /** Processes the pressed key */
@@ -108,14 +110,21 @@ char processKeyPressMessage(ALLEGRO_KEYBOARD_EVENT kbd){
         else setLogFileName("");
 
         hideMessage();
-        return 1;
+        if(!saveLog()){
+            return 1;
+        }
+
+        displayMessage("ERROR", "Cannot open file", MESSAGE_NORMAL);
+        gameStatus = game;
 
     }else if(kbd.keycode == ALLEGRO_KEY_ENTER && gameStatus == logLoadPrompt){
         if(!isPlaceholderVisible()) setLogFileName(getMessageContent());
         else setLogFileName("");
 
-        readLog(&guiAttemptMoveFromTo, &guiAttemptUndo);
         hideMessage();
+        if(readLog(&guiAttemptMoveFromTo, &guiAttemptUndo)){
+            displayMessage("CANNOT READ FILE", "Starting a new game", MESSAGE_NORMAL);
+        }
 
     }else{
         redirectKeyToMessage(kbd);
