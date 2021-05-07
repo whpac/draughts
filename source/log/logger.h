@@ -14,7 +14,7 @@ void logUndo();
 void logGameOver(PawnColor winner);
 
 void setLogFileName(char* name);
-void saveLog();
-void readLog(MoveFunction move, UndoFunction undo);
+int saveLog();
+int readLog(MoveFunction move, UndoFunction undo);
 
 #endif

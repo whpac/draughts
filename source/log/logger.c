@@ -21,6 +21,7 @@ void logInit(){
 
 /** Deinitializes a log */
 void logDeinit(){
+    clearLogQueue();
     queueDestroy(logMessages);
 }
 
@@ -84,20 +85,18 @@ void setLogFileName(char* name){
     }
 }
 
-/** Saves the log to a file */
-void saveLog(){
+/** Saves the log to a file. Returns 0 on success */
+int saveLog(){
     if(logFile[0] == '\0'){
-        // Clear log without saving
-        clearLogQueue();
-        return;
+        // If file is empty, return
+        return 0;
     }
 
     FILE* f = fopen(logFile, "w");
 
     if(f == NULL){
         printf("Unable to open the log file '%s'\n", logFile);
-        clearLogQueue();
-        return;
+        return 1;
     }
 
     fputs(":: DRAUGHTS log ::\n", f);
@@ -124,6 +123,7 @@ void saveLog(){
 
     fputs(":: THE END ::", f);
     fclose(f);
+    return 0;
 }
 
 /** Removes all the log messages */
@@ -134,19 +134,19 @@ void clearLogQueue(){
 }
 
 /**
- * Reads a log file
+ * Reads a log file. Returns 0 on success
  * @param move A function to call in order to move a pawn
  * @param undo A function to call in order to undo a move
  */
-void readLog(MoveFunction move, UndoFunction undo){
-    if(logFile[0] == '\0') return;
+int readLog(MoveFunction move, UndoFunction undo){
+    if(logFile[0] == '\0') return 0;
 
     FILE* f = fopen(logFile, "r");
 
     if(f == NULL){
         printf("Unable to open the file '%s'\n", logFile);
         setLogFileName("");
-        return;
+        return 1;
     }
 
     // Prevents from accidental overwriting the log
@@ -158,7 +158,7 @@ void readLog(MoveFunction move, UndoFunction undo){
         if(signature[i] != c){
             printf("The specified file is not valid\n");
             fclose(f);
-            return;
+            return 1;
         }
     }
 
@@ -180,11 +180,8 @@ void readLog(MoveFunction move, UndoFunction undo){
                 }
             }else if(!strcmp(action, "UNDO")){
                 if(undo != NULL) undo();
-            }else if(!strcmp(action, "OVER")){
-                // No need to do anything
-            }else{
-                printf("Unknown action: %s. Ignoring it.\n", action);
             }
+            // No need to do anything if action is unknown
         }
 
         // Read the rest of the line
@@ -192,4 +189,5 @@ void readLog(MoveFunction move, UndoFunction undo){
     }
 
     fclose(f);
+    return 0;
 }
