@@ -10,6 +10,8 @@ char doInputIteration();
 void handleVictory(int white_count, int black_count);
 void handleError();
 int getIntArg();
+void readFromFile();
+void saveToFile();
 
 /**
  * Begins the input loop.
@@ -24,17 +26,7 @@ void cliBeginInputLoop(){
     scanf("%c", &c);
     if(c != '\n') while(getchar() != '\n');
 
-    if(c == 'y' || c == 'Y'){
-        printf("\033[1A\033[2K");   // Clear last line
-        printf("Type the file path: ");
-
-        char file_name[65];
-        scanf(" %64s", &file_name);
-
-        setLogFileName(file_name);
-        readLog(attemptMovePawnAtTo, undoMove);
-    }
-    printf("\033[1A\033[2K");   // Clear last line
+    if(c == 'y' || c == 'Y') readFromFile();
 
     while(doInputIteration());
 
@@ -42,17 +34,13 @@ void cliBeginInputLoop(){
     printf("\033[2mN\033[0m\033[1D");    // Prints a gray N and goes back by one letter
     scanf("%c", &c);
 
-    if(c == 'y' || c == 'Y'){
-        printf("\033[1A\033[2K");   // Clear last line
-        printf("Type the target file path: ");
+    if(c != 'y' && c != 'Y') return;
+    if(c != '\n') while(getchar() != '\n');
 
-        char file_name[65];
-        scanf(" %64s", &file_name);
+    printf("\033[1A\033[2K");   // Clear last line
+    saveToFile();
 
-        setLogFileName(file_name);
-    }
-
-    saveLog();
+    printf("\033[2K");
 }
 
 /**
@@ -162,4 +150,72 @@ int getIntArg(){
     int v;
     scanf("%d", &v);
     return v;
+}
+
+/** Asks the user to type the source file name and reads it */
+void readFromFile(){
+    printf("\033[1A\033[2K");   // Clear last line
+    while(1){
+        printf("Type the file path: ");
+
+        char file_name[65];
+        file_name[64] = '\0';
+
+        // Read input char-by-char to detect empty input
+        for(int i = 0; i < 63; i++){
+            if((file_name[i] = getchar()) == '\n'){
+                file_name[i] = '\0';
+                break;
+            }
+        }
+        if(file_name[0] == '\0') break;
+
+        setLogFileName(file_name);
+        int res = readLog(attemptMovePawnAtTo, undoMove);
+        if(!res) break;
+
+        printf("\033[2K\033[1;31m");
+        switch(res){
+            case LOGGER_CANNOT_OPEN_FILE:
+                printf("Cannot open file '%s'.", file_name);
+                break;
+            case LOGGER_FILE_INVALID:
+                printf("File '%s' is invalid.", file_name);
+                break;
+            default:
+                printf("An error occured.");
+                break;
+        }
+        printf("\033[0m\n");
+
+        printf("\033[2K\033[2mTip: leave empty to start a new game.\033[0m\n");
+        printf("\033[1A\033[1A\033[1A\033[2K");
+    }
+}
+
+/** Asks user for target file name and saves the game there */
+void saveToFile(){
+    while(1){
+        // Ask for file to save
+        printf("Type the target file path: ");
+
+        char file_name[65];
+        file_name[64] = '\0';
+
+        // Read input char-by-char to detect empty input
+        for(int i = 0; i < 63; i++){
+            if((file_name[i] = getchar()) == '\n'){
+                file_name[i] = '\0';
+                break;
+            }
+        }
+        if(file_name[0] == '\0') break;
+
+        setLogFileName(file_name);
+        if(!saveLog()) break;
+
+        printf("\033[2K\033[1;31mCannot open file '%s'.\033[0m\n", file_name);
+        printf("\033[2K\033[2mTip: leave empty to discard the game.\033[0m\n");
+        printf("\033[1A\033[1A\033[1A\033[2K");
+    }
 }
