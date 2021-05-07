@@ -11,8 +11,8 @@ int main(int argc, char** argv)
 {
     char use_gui = 1;
     if(argc >= 2){
-        // If the first parameter is text, don't display the window
-        use_gui = strcmpi(argv[1], "text");
+        // If the first parameter is "text", don't display the window
+        use_gui = strcmp(argv[1], "text");
     }
 
     logInit();
