@@ -18,7 +18,11 @@ obj/%.o: source/%.c ${HEADERS}
 
 clean:
 	rmdir /q /s obj
-	mkdir obj
 
+# Ignoruje błędy, kiedy foldery bin i obj istnieją
+# 2> NUL znika komunikat błędu
+# || (exit 0) zapewnia traktowanie komendy jako udanej
 folders:
+	mkdir obj 2> NUL || (exit 0)
+	mkdir bin 2> NUL || (exit 0)
 	xcopy source obj /t /e
