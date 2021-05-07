@@ -30,7 +30,6 @@ int main(int argc, char** argv)
 
     destroyBoard();
 
-    saveLog();
     logDeinit();
     return 0;
 }

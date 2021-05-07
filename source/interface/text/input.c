@@ -51,6 +51,8 @@ void cliBeginInputLoop(){
 
         setLogFileName(file_name);
     }
+
+    saveLog();
 }
 
 /**

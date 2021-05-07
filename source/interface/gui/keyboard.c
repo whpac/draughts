@@ -44,6 +44,8 @@ void guiBeginInputLoop(){
         if(done)
             break;
     }
+
+    saveLog();
 }
 
 /** Processes the pressed key */
