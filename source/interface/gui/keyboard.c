@@ -5,14 +5,39 @@
 #include "keyboard.h"
 #include "message.h"
 
-void processKeyPress(int keycode);
-char processKeyPressMessage(ALLEGRO_KEYBOARD_EVENT kbd);
-void redirectKeyToMessage(ALLEGRO_KEYBOARD_EVENT kbd);
+/**
+ * General signature for key processors. 
+ * Should return 0 to continue or 1 to exit the game.
+ * @param kbd The keyboard event data
+ */
+typedef int (*KeyInterpreter)(ALLEGRO_KEYBOARD_EVENT kbd);
 
-enum { game, exitPrompt, logSavePrompt, logLoadPrompt } gameStatus = game;
+int keyPressedGame(ALLEGRO_KEYBOARD_EVENT kbd);
+int keyPressedGameOver(ALLEGRO_KEYBOARD_EVENT kbd);
+int keyPressedWelcome(ALLEGRO_KEYBOARD_EVENT kbd);
+int keyPressedLogLoadPrompt(ALLEGRO_KEYBOARD_EVENT kbd);
+int keyPressedLogLoadError(ALLEGRO_KEYBOARD_EVENT kbd);
+int keyPressedExitPrompt(ALLEGRO_KEYBOARD_EVENT kbd);
+int keyPressedLogSavePrompt(ALLEGRO_KEYBOARD_EVENT kbd);
+int keyPressedLogSaveError(ALLEGRO_KEYBOARD_EVENT kbd);
+int keyPressedMessage(ALLEGRO_KEYBOARD_EVENT kbd);
+
+void displayExitPrompt();
+void displayLogLoadPrompt();
+void displayLogSavePrompt();
 
 /** Begins the keyboard input loop */
 void guiBeginInputLoop(){
+    KeyInterpreter interpreters[8];
+    interpreters[welcome] = keyPressedWelcome;
+    interpreters[logLoadPrompt] = keyPressedLogLoadPrompt;
+    interpreters[logLoadError] = keyPressedLogLoadError;
+    interpreters[game] = keyPressedGame;
+    interpreters[gameOver] = keyPressedGameOver;
+    interpreters[exitPrompt] = keyPressedExitPrompt;
+    interpreters[logSavePrompt] = keyPressedLogSavePrompt;
+    interpreters[logSaveError] = keyPressedLogSaveError;
+
     guiPaintBoard();
 
     ALLEGRO_EVENT event;
@@ -28,17 +53,15 @@ void guiBeginInputLoop(){
                 guiPaint();
                 break;
 
-            case ALLEGRO_EVENT_KEY_CHAR:
-                if(isMessageShown()){
-                    done = processKeyPressMessage(event.keyboard);
-                }else{
-                    processKeyPress(event.keyboard.keycode);
-                }
+            case ALLEGRO_EVENT_KEY_CHAR:;
+                KeyInterpreter interpret = interpreters[guiGetGameStatus()];
+                done = interpret(event.keyboard);
                 break;
 
-            case ALLEGRO_EVENT_DISPLAY_CLOSE:
-                if(gameStatus == game && !isMessageShown()){
-                    processKeyPress(ALLEGRO_KEY_ESCAPE);
+            case ALLEGRO_EVENT_DISPLAY_CLOSE:;
+                GameStatus gs = guiGetGameStatus();
+                if(gs == game || gs == gameOver){
+                    displayExitPrompt();
                 }else{
                     done = 1;
                 }
@@ -50,8 +73,11 @@ void guiBeginInputLoop(){
     }
 }
 
-/** Processes the pressed key */
-void processKeyPress(int keycode){
+/** Processes the pressed key during the game */
+int keyPressedGame(ALLEGRO_KEYBOARD_EVENT kbd){
+    if(isMessageShown()) return keyPressedMessage(kbd);
+
+    int keycode = kbd.keycode;
     if(keycode == ALLEGRO_KEY_UP)
         guiMoveCursor(-1, 0);
     if(keycode == ALLEGRO_KEY_DOWN)
@@ -72,40 +98,99 @@ void processKeyPress(int keycode){
     if(keycode == ALLEGRO_KEY_U)
         guiAttemptUndo();
 
-    if(keycode == ALLEGRO_KEY_ESCAPE){
-        displayMessage("QUIT?", "Press ENTER to exit.", MESSAGE_NORMAL);
-        gameStatus = exitPrompt;
-    }
+    if(keycode == ALLEGRO_KEY_ESCAPE)
+        displayExitPrompt();
+
+    return 0;
 }
 
-/**
- * Processes the pressed key when there is a message on screen. 
- * If user requests to exit, returns 1.
- * @param kbd The keyboard event
- */
-char processKeyPressMessage(ALLEGRO_KEYBOARD_EVENT kbd){
-    if(guiIsWelcomeShown()){
-        if(kbd.keycode == ALLEGRO_KEY_N){
-            guiHideWelcome();
-        }
-        if(kbd.keycode == ALLEGRO_KEY_L){
-            guiHideWelcome();
-            displayMessage("LOAD FILE", "Type file name here", MESSAGE_EDITABLE | MESSAGE_FILE_FILTER);
-            gameStatus = logLoadPrompt;
-        }
-        return 0;
-    }
+/** Processes the pressed key when the game is over */
+int keyPressedGameOver(ALLEGRO_KEYBOARD_EVENT kbd){
+    if(kbd.keycode == ALLEGRO_KEY_U && !isMessageShown())
+        guiAttemptUndo();
 
     if(kbd.keycode == ALLEGRO_KEY_ESCAPE){
-        hideMessage();
-        gameStatus = game;
+        if(isMessageShown()) hideMessage();
+        else{
+            displayMessage("QUIT?", "Press ENTER to exit.", MESSAGE_NORMAL);
+            guiSetGameStatus(exitPrompt);
+        }
+    }
 
-    }else if(kbd.keycode == ALLEGRO_KEY_ENTER && gameStatus == exitPrompt){
-        hideMessage();
-        gameStatus = logSavePrompt;
-        displayMessage("SAVE GAME", "Leave empty to discard game", MESSAGE_EDITABLE | MESSAGE_FILE_FILTER);
+    return 0;
+}
 
-    }else if(kbd.keycode == ALLEGRO_KEY_ENTER && gameStatus == logSavePrompt){
+/** Processes the pressed key when there is a welcome message */
+int keyPressedWelcome(ALLEGRO_KEYBOARD_EVENT kbd){
+    if(kbd.keycode == ALLEGRO_KEY_N){
+        hideMessage();
+        guiSetGameStatus(game);
+
+    }else if(kbd.keycode == ALLEGRO_KEY_L){
+        hideMessage();
+        displayLogLoadPrompt();
+    }
+    return 0;
+}
+
+/** Processes the pressed key when there is a log load prompt */
+int keyPressedLogLoadPrompt(ALLEGRO_KEYBOARD_EVENT kbd){
+    if(kbd.keycode == ALLEGRO_KEY_ESCAPE){
+        hideMessage();
+        guiSetGameStatus(game);
+
+    }else if(kbd.keycode == ALLEGRO_KEY_ENTER){
+        if(!isPlaceholderVisible()) setLogFileName(getMessageContent());
+        else setLogFileName("");
+
+        hideMessage();
+        int err = readLog(&guiAttemptMoveFromTo, &guiAttemptUndo);
+        if(err){
+            char* error_msg = "Cannot open file";
+            if(err == LOGGER_FILE_INVALID) error_msg = "File is invalid";
+            displayMessage("READ ERROR", error_msg, MESSAGE_NORMAL);
+            guiSetGameStatus(logLoadError);
+        }else{
+            guiSetGameStatus(game);
+        }
+    }else{
+        appendCharToUserText((char)kbd.unichar);
+    }
+    return 0;
+}
+
+/** Processes the pressed key when there is a log load error message */
+int keyPressedLogLoadError(ALLEGRO_KEYBOARD_EVENT kbd){
+    if(kbd.keycode == ALLEGRO_KEY_ESCAPE){
+        hideMessage();
+        guiSetGameStatus(game);
+    }else{
+        hideMessage();
+        displayLogLoadPrompt();
+    }
+    return 0;
+}
+
+/** Processes the pressed key when there is an exit prompt */
+int keyPressedExitPrompt(ALLEGRO_KEYBOARD_EVENT kbd){
+    if(kbd.keycode == ALLEGRO_KEY_ESCAPE){
+        hideMessage();
+        guiSetGameStatus(game);
+
+    }else if(kbd.keycode == ALLEGRO_KEY_ENTER){
+        hideMessage();
+        displayLogSavePrompt();
+    }
+    return 0;
+}
+
+/** Processes the pressed key when there is a log save prompt */
+int keyPressedLogSavePrompt(ALLEGRO_KEYBOARD_EVENT kbd){
+    if(kbd.keycode == ALLEGRO_KEY_ESCAPE){
+        hideMessage();
+        guiSetGameStatus(game);
+
+    }else if(kbd.keycode == ALLEGRO_KEY_ENTER){
         if(!isPlaceholderVisible()) setLogFileName(getMessageContent());
         else setLogFileName("");
 
@@ -115,27 +200,50 @@ char processKeyPressMessage(ALLEGRO_KEYBOARD_EVENT kbd){
         }
 
         displayMessage("ERROR", "Cannot open file", MESSAGE_NORMAL);
-        gameStatus = game;
-
-    }else if(kbd.keycode == ALLEGRO_KEY_ENTER && gameStatus == logLoadPrompt){
-        if(!isPlaceholderVisible()) setLogFileName(getMessageContent());
-        else setLogFileName("");
-
-        hideMessage();
-        if(readLog(&guiAttemptMoveFromTo, &guiAttemptUndo)){
-            displayMessage("CANNOT READ FILE", "Starting a new game", MESSAGE_NORMAL);
-        }
-
+        guiSetGameStatus(logSaveError);
     }else{
-        redirectKeyToMessage(kbd);
+        appendCharToUserText((char)kbd.unichar);
     }
     return 0;
 }
 
-/**
- * Redirects a keypress to the message dialog
- * @param kbd The keyboard event
- */
-void redirectKeyToMessage(ALLEGRO_KEYBOARD_EVENT kbd){
-    appendCharToUserText((char)kbd.unichar);
+/** Processes the pressed key when there is a log save error message */
+int keyPressedLogSaveError(ALLEGRO_KEYBOARD_EVENT kbd){
+    if(kbd.keycode == ALLEGRO_KEY_ESCAPE){
+        hideMessage();
+        return 1;
+    }else{
+        hideMessage();
+        displayLogSavePrompt();
+    }
+    return 0;
+}
+
+/** Processes the pressed key when there is a message on screen */
+int keyPressedMessage(ALLEGRO_KEYBOARD_EVENT kbd){
+    if(kbd.keycode == ALLEGRO_KEY_ESCAPE){
+        hideMessage();
+
+    }else{
+        appendCharToUserText((char)kbd.unichar);
+    }
+    return 0;
+}
+
+/** Displays an exit prompt */
+void displayExitPrompt(){
+    displayMessage("QUIT?", "Press ENTER to exit.", MESSAGE_NORMAL);
+    guiSetGameStatus(exitPrompt);
+}
+
+/** Displays a log load prompt */
+void displayLogLoadPrompt(){
+    displayMessage("LOAD FILE", "Type file name here", MESSAGE_EDITABLE | MESSAGE_FILE_FILTER);
+    guiSetGameStatus(logLoadPrompt);
+}
+
+/** Displays a log save prompt */
+void displayLogSavePrompt(){
+    displayMessage("SAVE GAME", "Leave empty to discard game", MESSAGE_EDITABLE | MESSAGE_FILE_FILTER);
+    guiSetGameStatus(logSavePrompt);
 }
