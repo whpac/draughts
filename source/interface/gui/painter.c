@@ -59,7 +59,9 @@ void paintBoard(Pawn** buffer, int board_size){
         }
     }
 
-    if(!isGameOver() && !guiIsWelcomeShown()){
+    // Paint markers only during the game
+    GameStatus gs = guiGetGameStatus();
+    if(gs == game){
         List* markers = guiGetMarkers();
         while(listGetLength(markers) > 0){
             Marker* marker = listGet(markers, 0);
@@ -176,10 +178,10 @@ void paintMarker(int row, int col, MarkerColor marker_color, MarkerStyle marker_
  * Prints the number of pawns still in game, the currently moving player and some other info.
  */
 void paintStatus(){
+    char* by = "DRAUGHTS by Marcin Szwarc";
     ALLEGRO_FONT* font = guiGetFont();
     float status_bar_y = getBoardSize() * FIELD_WIDTH + 4;
     float window_width = getBoardSize() * FIELD_WIDTH;
-    char over = isGameOver();
     char msg_shown = isMessageShown();
     char str_buffer[3];
 
@@ -199,7 +201,9 @@ void paintStatus(){
     char* move_indicator = "<MOVE ";
     if(getNextMoveColor() == black) move_indicator = " MOVE>";
 
-    if(!guiIsWelcomeShown()){
+    GameStatus gs = guiGetGameStatus();
+    char over = isGameOver();
+    if(gs == game || gs == gameOver){
         if(!over) al_draw_text(font, DARK_WHITE_TEXT, window_width / 2, status_bar_y, ALLEGRO_ALIGN_CENTER, move_indicator);
 
         char* arrows = "ARROWS: move";
@@ -210,13 +214,35 @@ void paintStatus(){
         al_draw_text(font, DARK_WHITE_TEXT, window_width - 0.5 * CHAR_WIDTH, status_bar_y + CHAR_WIDTH + 4, ALLEGRO_ALIGN_RIGHT, esc);
         al_draw_text(font, (over || msg_shown) ? DARK_GRAY_TEXT : DARK_WHITE_TEXT, 0.5 * CHAR_WIDTH, status_bar_y + 2*CHAR_WIDTH + 8, ALLEGRO_ALIGN_LEFT, enter);
         al_draw_text(font, msg_shown ? DARK_GRAY_TEXT : DARK_WHITE_TEXT, window_width - 0.5 * CHAR_WIDTH, status_bar_y + 2*CHAR_WIDTH + 8, ALLEGRO_ALIGN_RIGHT, undo);
-    }else{
+
+    }else if(gs == welcome){
         char* new_game = "N: new game";
         char* load_log = "L: load saved";
         char* github = "github.com/whpac/draughts";
         al_draw_text(font, DARK_WHITE_TEXT, 0.5 * CHAR_WIDTH, status_bar_y + CHAR_WIDTH + 4, ALLEGRO_ALIGN_LEFT, new_game);
         al_draw_text(font, DARK_WHITE_TEXT, window_width - 0.5 * CHAR_WIDTH, status_bar_y + CHAR_WIDTH + 4, ALLEGRO_ALIGN_RIGHT, load_log);
         al_draw_text(font, DARK_GRAY_TEXT, window_width / 2, status_bar_y + 2*CHAR_WIDTH + 8, ALLEGRO_ALIGN_CENTER, github);
+
+    }else if(gs == logLoadPrompt || gs == logSavePrompt){
+        char* enter = "ENTER: confirm";
+        char* esc = "ESC: close";
+        al_draw_text(font, DARK_WHITE_TEXT, 0.5 * CHAR_WIDTH, status_bar_y + CHAR_WIDTH + 4, ALLEGRO_ALIGN_LEFT, enter);
+        al_draw_text(font, DARK_WHITE_TEXT, window_width - 0.5 * CHAR_WIDTH, status_bar_y + CHAR_WIDTH + 4, ALLEGRO_ALIGN_RIGHT, esc);
+        al_draw_text(font, DARK_GRAY_TEXT, window_width / 2, status_bar_y + 2*CHAR_WIDTH + 8, ALLEGRO_ALIGN_CENTER, by);
+
+    }else if(gs == logLoadError || gs == logSaveError){
+        char* any = "ANY: retry";
+        char* esc = "ESC: give up";
+        al_draw_text(font, DARK_WHITE_TEXT, 0.5 * CHAR_WIDTH, status_bar_y + CHAR_WIDTH + 4, ALLEGRO_ALIGN_LEFT, any);
+        al_draw_text(font, DARK_WHITE_TEXT, window_width - 0.5 * CHAR_WIDTH, status_bar_y + CHAR_WIDTH + 4, ALLEGRO_ALIGN_RIGHT, esc);
+        al_draw_text(font, DARK_GRAY_TEXT, window_width / 2, status_bar_y + 2*CHAR_WIDTH + 8, ALLEGRO_ALIGN_CENTER, by);
+
+    }else if(gs == exitPrompt){
+        char* enter = "ENTER: quit";
+        char* esc = "ESC: cancel";
+        al_draw_text(font, DARK_WHITE_TEXT, 0.5 * CHAR_WIDTH, status_bar_y + CHAR_WIDTH + 4, ALLEGRO_ALIGN_LEFT, enter);
+        al_draw_text(font, DARK_WHITE_TEXT, window_width - 0.5 * CHAR_WIDTH, status_bar_y + CHAR_WIDTH + 4, ALLEGRO_ALIGN_RIGHT, esc);
+        al_draw_text(font, DARK_GRAY_TEXT, window_width / 2, status_bar_y + 2*CHAR_WIDTH + 8, ALLEGRO_ALIGN_CENTER, by);
     }
 }
 
