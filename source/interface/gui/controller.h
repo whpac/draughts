@@ -3,12 +3,23 @@
 
 #include "../../data/list.h"
 
+typedef enum GameStatus {
+    welcome,
+    logLoadPrompt,
+    logLoadError,
+    game,
+    gameOver,
+    exitPrompt,
+    logSavePrompt,
+    logSaveError
+} GameStatus;
+
 void guiInitController();
 void guiDeinitController();
 void guiPaintBoard();
 
-char guiIsWelcomeShown();
-void guiHideWelcome();
+void guiSetGameStatus(GameStatus status);
+GameStatus guiGetGameStatus();
 
 void guiMoveCursor(int drow, int dcol);
 

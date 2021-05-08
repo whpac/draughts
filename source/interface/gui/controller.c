@@ -13,14 +13,15 @@
 #include "painter.h"
 #include "message.h"
 
-char welcomeShown = 1;
 int cursorRow = 0, cursorCol = 0;
 int selectedRow = -1, selectedCol = -1;
 char selectionFrozen = 0;
 Pawn** boardBuffer;
 List* allowedMoves = NULL;
 Stack* cursorStack = NULL;
-enum { waitingForSource, waitingForDestination, gameOver } currentState;
+GameStatus gameStatus;
+char isWaitingForSource;
+char isOver;
 
 void guiReloadBoard();
 void guiAfterMove();
@@ -35,7 +36,9 @@ char isValidDestinationField(int rfrom, int cfrom, int rto, int cto);
 /** Initializes the GUI controller */
 void guiInitController(){
     boardBuffer = malloc(sizeof(Pawn*) * getBoardSize() * getBoardSize());
-    currentState = waitingForSource;
+    isWaitingForSource = 1;
+    isOver = 0;
+    gameStatus = welcome;
     cursorStack = stackCreate();
 
     messageInit();
@@ -74,15 +77,15 @@ void guiReloadBoard(){
     }
 }
 
-/** Checks whether the welcome message is shown */
-char guiIsWelcomeShown(){
-    return welcomeShown;
+/** Sets the game status */
+void guiSetGameStatus(GameStatus status){
+    gameStatus = status;
+    if(status == game && isOver) gameStatus = gameOver;
 }
 
-/** Marks the welcome message as hidden */
-void guiHideWelcome(){
-    if(welcomeShown) hideMessage();
-    welcomeShown = 0;
+/** Returns the game status */
+GameStatus guiGetGameStatus(){
+    return gameStatus;
 }
 
 /**
@@ -156,7 +159,7 @@ void guiSelectCurrentField(char freeze){
         if(!isValidSourceField(cursorRow, cursorCol)) return;
         selectedRow = cursorRow;
         selectedCol = cursorCol;
-        currentState = waitingForDestination;
+        isWaitingForSource = 0;
         selectionFrozen = selectionFrozen || freeze;
     }
 }
@@ -169,7 +172,7 @@ void guiDeselectField(char unfreeze){
     if(selectionFrozen && !unfreeze) return;
 
     selectedRow = selectedCol = -1;
-    currentState = waitingForSource;
+    isWaitingForSource = 1;
     selectionFrozen = 0;
 }
 
@@ -284,19 +287,25 @@ void guiAfterMove(){
         displayMessage("GAME OVER", message, MESSAGE_NORMAL);
 
         logGameOver(white_pawns == 0 ? black : white);
-        currentState = gameOver;
+        gameStatus = gameOver;
+        isOver = 1;
     }else if(listGetLength(allowedMoves) == 0){
         char* message = getNextMoveColor() == white ? "WHITE cannot move." : "BLACK cannot move.";
         displayMessage("GAME OVER", message, MESSAGE_NORMAL);
 
         logGameOver(getNextMoveColor() == white ? black : white);
-        currentState = gameOver;
+        gameStatus = gameOver;
+        isOver = 1;
     }
 }
 
 /** Tries to undo the recently made move */
 void guiAttemptUndo(){
-    if(currentState == gameOver) hideMessage();
+    if(isOver){
+        hideMessage();
+        gameStatus = game;
+        isOver = 0;
+    }
 
     undoMove();
     guiDeselectField(1);
@@ -315,12 +324,12 @@ void guiAttemptUndo(){
 
 /** Returns whether the game is over */
 char isGameOver(){
-    return currentState == gameOver;
+    return isOver;
 }
 
 /** Returns a color for the cursor */
 MarkerColor getCursorColor(){
-    if(currentState == waitingForSource){
+    if(isWaitingForSource){
         return isValidSourceField(cursorRow, cursorCol) ? green : red;
     }else{
         return isValidDestinationField(selectedRow, selectedCol, cursorRow, cursorCol) ? green : red;
