@@ -118,7 +118,7 @@ void appendCharToUserText(char c){
     if(m->userText == NULL) return;
 
     if(m->flags & MESSAGE_FILE_FILTER){
-        char forbidden[] = { '<', '>', '/', '\\', '|', ':', '*', '?', '"' };
+        char forbidden[] = { '<', '>', '|', ':', '*', '?', '"' };
         for(int i = 0; i < (sizeof(forbidden) / sizeof(forbidden[0])); i++){
             if(c == forbidden[i]) return;
         }
