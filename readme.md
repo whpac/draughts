@@ -83,3 +83,6 @@ in `interface/` directory, further subdivided into `gui/` and `text/`.
 
 The last folder is `data/` which contains some data structures that are used by the game,
 such as queue or list.
+
+## Author and license
+This program has been written by Marcin Szwarc, who shared it under the MIT license.
