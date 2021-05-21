@@ -65,12 +65,13 @@ char doInputIteration(){
         handleError(process_res);
         printf("Type command ('%c' for help): ", help_char);
         scanf("%c", &cmd);
-        while(getchar() != '\n');  // Removes any newlines from the buffer
 
         if(cmd == 'q'){
+            while(getchar() != '\n');
             return 0;
         }
         process_res = processCommand(cmd, &getIntArg);
+        while(getchar() != '\n');  // Removes any newlines from the buffer
     }while(process_res != CMD_PROC_SUCCESSFUL);
 
     return 1;
